@@ -1,0 +1,368 @@
+{
+  "instagram": {
+    "description": "Instagram MCP server for posting, commenting, messaging, and analytics using Instagram Graph API. Provides comprehensive access to Instagram Business and Creator account functionality including media posting, comment management, direct messaging, and insights.",
+    "tools": [
+      {
+        "name": "INSTAGRAM_CREATE_MEDIA_CONTAINER",
+        "description": "Create Media Container. Create a draft media container for photos/videos/reels before publishing.",
+        "parameters": {
+          "ig_user_id": "string - Instagram user ID (required)",
+          "image_url": "string - Image URL for photo post (optional)",
+          "video_url": "string - Video URL for video/reel post (optional)",
+          "caption": "string - Caption for the media (optional)",
+          "media_type": "string - Media type (IMAGE or VIDEO only) (optional)",
+          "content_type": "string - Content type (optional)",
+          "cover_url": "string - Cover image URL for video/reel (optional)",
+          "is_carousel_item": "boolean - Set true if media is part of a carousel (optional)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_POST_IG_USER_MEDIA",
+        "description": "Post IG User Media. Tool to create a media container for Instagram posts. Use this to create a container for images, videos, Reels, or carousels. This is the first step in Instagram's two-step publishing process - after creating the container, use the media_publish endpoint to publish it.",
+        "parameters": {
+          "ig_user_id": "string - Instagram user ID (required)",
+          "image_url": "string - Image URL for photo post (optional)",
+          "video_url": "string - Video URL for video/reel post (optional)",
+          "caption": "string - Caption for the media (optional)",
+          "media_type": "string - Media type (IMAGE or VIDEO) (optional)",
+          "cover_url": "string - Cover image URL for video/reel (optional)",
+          "is_carousel_item": "boolean - Set True if this media is part of a carousel (optional)",
+          "children": "array - List of child media container IDs for carousel (optional)",
+          "location_id": "string - Location ID to tag in the post (optional)",
+          "user_tags": "array - List of user tags (JSON format) (optional)",
+          "thumb_offset": "number - Thumbnail offset for video (in seconds) (optional)",
+          "share_to_feed": "boolean - Share to feed (for Reels) (optional)",
+          "audio_name": "string - Audio name for Reels (optional)",
+          "collaborators": "array - List of collaborator user IDs (optional)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_CREATE_CAROUSEL_CONTAINER",
+        "description": "Create Carousel Container. Create a draft carousel post with multiple images/videos before publishing.",
+        "parameters": {
+          "ig_user_id": "string - Instagram user ID (required)",
+          "children": "array - List of child media container IDs (optional)",
+          "child_image_files": "array - Local image file paths (not supported yet) (optional)",
+          "child_image_urls": "array - Image URLs to create child containers (optional)",
+          "child_video_files": "array - Local video file paths (not supported yet) (optional)",
+          "child_video_urls": "array - Video URLs to create child containers (optional)",
+          "caption": "string - Caption for the carousel post (optional)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_GET_POST_STATUS",
+        "description": "Get Post Status. Check the processing status of a draft post container.",
+        "parameters": {
+          "creation_id": "string - Creation ID from media container (required)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_CREATE_POST",
+        "description": "Create Post. Publish a draft media container to Instagram (final publishing step). IMPORTANT: After creating a media container, Instagram may need time to process the media before it can be published. If called immediately after container creation, you may receive error code 9007 (\"The media is not ready for publishing\"). This action automatically retries with exponential backoff (up to ~45 seconds total) to handle this processing delay. For large videos or slow processing, consider using INSTAGRAM_GET_POST_STATUS to poll the container status until it shows 'FINISHED' before calling this action.",
+        "parameters": {
+          "creation_id": "string - Creation ID from media container (required)",
+          "ig_user_id": "string - Instagram user ID (required)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_POST_IG_USER_MEDIA_PUBLISH",
+        "description": "Publish IG User Media. Tool to publish a media container to an Instagram Business account. This action automatically waits for the container to finish processing before publishing. Rate limited to 25 API-published posts per 24-hour moving window. The publishing process: 1. First, create a media container using INSTAGRAM_CREATE_MEDIA_CONTAINER 2. Call this action with the creation_id - it will automatically poll for FINISHED status 3. Once ready, the media is published and the published media ID is returned For videos/reels, processing may take 30-120 seconds. Images are typically instant.",
+        "parameters": {
+          "creation_id": "string - Creation ID from media container (required)",
+          "ig_user_id": "string - Instagram user ID (required)",
+          "max_wait_seconds": "number - Maximum time to wait for processing (seconds) (optional, default 60)",
+          "poll_interval_seconds": "number - Interval between status checks (seconds) (optional, default 3)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_GET_USER_INFO",
+        "description": "Get User Info. Get Instagram user info including profile details and statistics.",
+        "parameters": {
+          "ig_user_id": "string - Instagram user ID (required)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_GET_USER_BY_USERNAME",
+        "description": "Get User by Username. Find an Instagram user's ID by their username using Business Discovery API. Works for Business and Creator accounts. NOTE: This endpoint requires App Review for 'Instagram Public Content Access' feature. If you get error (#10), your app needs to be reviewed and approved by Facebook.",
+        "parameters": {
+          "username": "string - Instagram username (without @ symbol, required)",
+          "ig_user_id": "string - Your Instagram user ID (optional, uses env var if not provided)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_GET_USER_INSIGHTS",
+        "description": "Get User Insights. Get Instagram account-level insights and analytics (profile views, reach, follower count, etc.). IMPORTANT: You cannot mix metrics with different metric_type requirements in one request. Metrics requiring total_value (profile_views, reach) must use metric_type='total_value'. Metrics like follower_count don't support total_value - omit metric_type or use time_series for those. Valid metrics: reach, follower_count, website_clicks, profile_views, online_followers, accounts_engaged, total_interactions, views, etc. Note: 'impressions' is NOT valid for user insights (only for media insights). breakdown: Only applicable when metric_type=total_value and only for supported metrics. timeframe: Required for demographics-related metrics and overrides since/until for those metrics.",
+        "parameters": {
+          "ig_user_id": "string - Instagram user ID (required)",
+          "metric": "array - Metrics to retrieve (required)",
+          "period": "string - Aggregation period (optional, default day)",
+          "metric_type": "string - Metric type: time_series or total_value (optional)",
+          "breakdown": "string - Breakdown (only applicable when metric_type=total_value) (optional)",
+          "since": "string - Start date (ISO 8601 format) (optional)",
+          "until": "string - End date (ISO 8601 format) (optional)",
+          "timeframe": "string - Timeframe (required for demographics-related metrics) (optional)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_GET_USER_MEDIA",
+        "description": "Get User Media. Get Instagram user's media (posts, photos, videos).",
+        "parameters": {
+          "ig_user_id": "string - Instagram user ID (required)",
+          "limit": "number - Number of media items to retrieve (optional, default 25)",
+          "after": "string - Paging cursor: after (optional)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_GET_IG_USER_MEDIA",
+        "description": "Get IG User Media. Get Instagram user's media collection (posts, photos, videos, reels, carousels). Use when you need to retrieve all media published by an Instagram Business or Creator account with support for pagination and time-based filtering.",
+        "parameters": {
+          "ig_user_id": "string - Instagram user ID (required)",
+          "fields": "string - Fields to return (optional, default id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,username)",
+          "limit": "number - Number of media items to retrieve (optional, default 25)",
+          "after": "string - Paging cursor: after (optional)",
+          "before": "string - Paging cursor: before (optional)",
+          "since": "string - Filter media created after this timestamp (ISO 8601 format) (optional)",
+          "until": "string - Filter media created before this timestamp (ISO 8601 format) (optional)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_GET_IG_USER_STORIES",
+        "description": "Get IG User Stories. Get active story media objects for an Instagram Business or Creator account. Returns stories that are currently active within the 24-hour window. Use this to retrieve story content, metadata, and engagement metrics for monitoring or analytics purposes.",
+        "parameters": {
+          "ig_user_id": "string - Instagram user ID (required)",
+          "fields": "string - Fields to return (optional, default id,media_type,media_url,permalink,timestamp)",
+          "limit": "number - Number of stories to retrieve (optional)",
+          "after": "string - Paging cursor: after (optional)",
+          "before": "string - Paging cursor: before (optional)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_GET_IG_USER_TAGS",
+        "description": "Get IG User Tags. Get Instagram media where the user has been tagged by other users. Use when you need to retrieve all media in which an Instagram Business or Creator account has been tagged, including tags in captions, comments, or on the media itself.",
+        "parameters": {
+          "ig_user_id": "string - Instagram user ID (required)",
+          "fields": "string - Fields to return (optional, default id,caption,media_type,media_url,permalink,timestamp,username)",
+          "limit": "number - Number of tagged media items to retrieve (optional, default 25)",
+          "after": "string - Paging cursor: after (optional)",
+          "before": "string - Paging cursor: before (optional)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_GET_IG_USER_CONTENT_PUBLISHING_LIMIT",
+        "description": "Get IG User Content Publishing Limit. Get an Instagram Business Account's current content publishing usage. Use this to monitor quota usage and avoid hitting rate limits when publishing content via the API.",
+        "parameters": {
+          "ig_user_id": "string - Instagram user ID (required)",
+          "fields": "string - Fields to return (optional, default quota_usage,config)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_GET_IG_USER_LIVE_MEDIA",
+        "description": "Get IG User Live Media. Get live media objects during an active Instagram broadcast. Returns the live video media ID and metadata when a live broadcast is in progress on an Instagram Business or Creator account. Use this to monitor active live streams and access real-time engagement data.",
+        "parameters": {
+          "ig_user_id": "string - Instagram user ID (required)",
+          "fields": "string - Fields to return (optional, default id,media_type,media_url,timestamp,permalink)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_GET_IG_MEDIA_COMMENTS",
+        "description": "Get IG Media Comments. Tool to retrieve comments on an Instagram media object. Use when you need to fetch comments from a specific Instagram post, photo, video, or carousel. Supports cursor-based pagination for navigating through large comment lists.",
+        "parameters": {
+          "ig_media_id": "string - Instagram media ID (required)",
+          "fields": "string - Fields to return (optional, default id,text,username,timestamp,like_count,from,hidden,media,parent_id)",
+          "limit": "number - Max comments to return (optional, default 25)",
+          "after": "string - Paging cursor: after (optional)",
+          "before": "string - Paging cursor: before (optional)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_GET_POST_COMMENTS",
+        "description": "Get Post Comments. Get comments on an Instagram post.",
+        "parameters": {
+          "ig_post_id": "string - Instagram post ID (required)",
+          "limit": "number - Number of comments to retrieve (optional, default 25)",
+          "after": "string - Paging cursor: after (optional)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_GET_POST_INSIGHTS",
+        "description": "Get Post Insights. Get Instagram post insights/analytics (impressions, reach, engagement, etc.).",
+        "parameters": {
+          "ig_post_id": "string - Instagram post ID (required)",
+          "metric_preset": "string - Metric preset to use (optional, default auto_safe)",
+          "metric": "array - Specific metrics to retrieve (optional, overrides metric_preset if provided)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_GET_IG_MEDIA",
+        "description": "Get Instagram Media. Get a published Instagram Media object (photo, video, story, reel, or carousel). Use when you need to retrieve detailed information about a specific Instagram post including engagement metrics, caption, media URLs, and metadata. NOTE: This action is for published media only. For unpublished container IDs (from INSTAGRAM_CREATE_MEDIA_CONTAINER), use INSTAGRAM_GET_POST_STATUS to check status instead.",
+        "parameters": {
+          "ig_media_id": "string - Instagram media ID (required)",
+          "fields": "string - Fields to return (optional, default id)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_GET_IG_MEDIA_CHILDREN",
+        "description": "Get IG Media Children. Tool to get media objects (images/videos) that are children of an Instagram carousel/album post. Use when you need to retrieve individual media items from a carousel album post. Note: Carousel children media do not support insights queries - for analytics, query metrics at the parent carousel level.",
+        "parameters": {
+          "ig_media_id": "string - Instagram media ID (required)",
+          "fields": "string - Fields to return (optional, default id,media_type,media_url,permalink,timestamp)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_POST_IG_MEDIA_COMMENTS",
+        "description": "Post IG Media Comments. Tool to create a comment on an Instagram media object. Use when you need to post a comment on a specific Instagram post, photo, video, or carousel. The comment must be 300 characters or less, contain at most 4 hashtags and 1 URL, and cannot consist entirely of capital letters.",
+        "parameters": {
+          "ig_media_id": "string - Instagram media ID (required)",
+          "message": "string - Comment message (required, max 300 chars, max 4 hashtags, max 1 URL)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_POST_IG_COMMENT_REPLIES",
+        "description": "Post IG Comment Replies. Tool to create a reply to an Instagram comment. Use when you need to reply to a specific comment on an Instagram post owned by a Business or Creator account. The reply must be 300 characters or less, contain at most 4 hashtags and 1 URL, and cannot consist entirely of capital letters.",
+        "parameters": {
+          "ig_comment_id": "string - Instagram comment ID to reply to (required)",
+          "message": "string - Reply message (required, max 300 chars, max 4 hashtags, max 1 URL)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_POST_IG_USER_MENTIONS",
+        "description": "Reply to IG User Mentions. Tool to reply to a mention of your Instagram Business or Creator account. Use when you need to respond to comments or media captions where your account has been @mentioned by another Instagram user. This creates a comment on the media or comment containing the mention.",
+        "parameters": {
+          "ig_user_id": "string - Instagram user ID (required)",
+          "media_id": "string - Media ID where the mention is located (required)",
+          "message": "string - Reply message (required, max 300 chars, max 4 hashtags, max 1 URL)",
+          "comment_id": "string - Comment ID if replying to a comment mention (optional)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_REPLY_TO_COMMENT",
+        "description": "Reply To Comment. Reply to a comment on Instagram media.",
+        "parameters": {
+          "ig_comment_id": "string - Instagram comment ID to reply to (required)",
+          "message": "string - Reply message (required)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_GET_IG_COMMENT_REPLIES",
+        "description": "Get IG Comment Replies. Get replies to a specific Instagram comment. Returns a list of comment replies with details like text, username, timestamp, and like count. Use when you need to retrieve child comments (replies) for a specific parent comment.",
+        "parameters": {
+          "ig_comment_id": "string - Instagram comment ID (required)",
+          "fields": "string - Fields to return (optional, default id,text,username,timestamp,like_count,hidden,from,media,parent_id,legacy_instagram_comment_id)",
+          "limit": "number - Max replies to return (optional, default 25)",
+          "after": "string - Paging cursor: after (optional)",
+          "before": "string - Paging cursor: before (optional)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_DELETE_COMMENT",
+        "description": "Delete Comment. Tool to delete a comment on Instagram media. Use when you need to remove a comment that was created by your Instagram Business or Creator Account. Note: You can only delete comments that your account created - you cannot delete other users' comments unless they are on your own media.",
+        "parameters": {
+          "ig_comment_id": "string - Instagram comment ID to delete (required)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_GET_IG_MEDIA_INSIGHTS",
+        "description": "Get IG Media Insights. Tool to get insights and metrics for Instagram media objects (photos, videos, reels, carousel albums). Use when you need to retrieve performance data such as views, reach, likes, comments, saves, and shares for specific media. IMPORTANT: In Graph API v22.0+, 'impressions' is no longer supported - use 'reach' instead. Valid metrics for v22.0+: reach, likes, comments, shares, saved, video_views, plays, total_interactions, views, replies. Note: Insights data is only available for media published within the last 2 years, and the account must have at least 1,000 followers.",
+        "parameters": {
+          "ig_media_id": "string - Instagram media ID (required)",
+          "metric": "array - Metrics to retrieve (required). For v22.0+: reach, likes, comments, shares, saved, video_views, plays, total_interactions, views, replies. Note: 'impressions' is NOT supported in v22.0+ - use 'reach' instead. For v21.0 and below, 'impressions' is available.",
+          "period": "string - Aggregation period (optional, default lifetime)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_GET_CONVERSATION",
+        "description": "Get Conversation. Get details about a specific Instagram DM conversation (participants, etc).",
+        "parameters": {
+          "conversation_id": "string - Conversation ID (required)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_GET_CONVERSATIONS",
+        "description": "Get Conversations. List Instagram DM conversations to find conversation IDs.",
+        "parameters": {
+          "page_id": "string - Facebook Page ID (optional, auto-detected if not provided)",
+          "limit": "number - Number of conversations to retrieve (optional)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_LIST_ALL_CONVERSATIONS",
+        "description": "List All Conversations. List all Instagram DM conversations for the authenticated user.",
+        "parameters": {
+          "ig_user_id": "string - Instagram user ID (required)",
+          "limit": "number - Number of conversations to retrieve (optional, default 25)",
+          "after": "string - Paging cursor: after (optional)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_LIST_ALL_MESSAGES",
+        "description": "List All Messages. List all messages from a specific Instagram DM conversation.",
+        "parameters": {
+          "conversation_id": "string - Conversation ID (required)",
+          "limit": "number - Number of messages to retrieve (optional, default 25)",
+          "after": "string - Paging cursor: after (optional)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_SEND_TEXT_MESSAGE",
+        "description": "Send Text Message. Send a text message to an Instagram user via DM.",
+        "parameters": {
+          "recipient_id": "string - Recipient Instagram user ID (required)",
+          "text": "string - Text message to send (required)",
+          "ig_user_id": "string - Instagram user ID (optional)",
+          "reply_to_message_id": "string - Message ID to reply to (optional)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_SEND_IMAGE",
+        "description": "Send Image. Send an image via Instagram DM to a specific user.",
+        "parameters": {
+          "recipient_id": "string - Recipient Instagram user ID (required)",
+          "image_url": "string - Image URL to send (required)",
+          "ig_user_id": "string - Instagram user ID (optional)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      },
+      {
+        "name": "INSTAGRAM_MARK_SEEN",
+        "description": "Mark Seen. Mark Instagram DM messages as read/seen for a specific user. This action sends a 'mark_seen' sender action to indicate that messages from the specified recipient have been read. This is similar to the Facebook Messenger sender_action feature. IMPORTANT LIMITATIONS: - The sender_action API feature has VERY LIMITED support on Instagram and may require App Review - Error (#3) indicates your app doesn't have this capability - may not be available for Instagram - The recipient must have an active 24-hour messaging window open - Requires instagram_manage_messages permission - Only works with Instagram Business or Creator accounts NOTE: This feature may not be available for Instagram DMs. Instagram's mark_seen functionality has very limited support compared to Facebook Messenger.",
+        "parameters": {
+          "recipient_id": "string - Recipient Instagram user ID (required)",
+          "ig_user_id": "string - Instagram user ID (optional)",
+          "graph_api_version": "string - Graph API version (optional, default v21.0)"
+        }
+      }
+    ]
+  }
+}

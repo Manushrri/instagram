@@ -1,0 +1,32 @@
+{
+  "mcpServers": {
+    "instagram": {
+      "command": "uv",
+      "args": ["run", "instagram-mcp/instagram_mcp_server.py"],
+      "type": "stdio",
+      "env": {
+        "INSTAGRAM_ACCESS_TOKEN": {
+          "source": "user",
+          "collection_method": "prompt",
+          "env_var": "INSTAGRAM_ACCESS_TOKEN"
+        },
+        "INSTAGRAM_USER_ID": {
+          "source": "user",
+          "collection_method": "prompt",
+          "env_var": "INSTAGRAM_USER_ID"
+        },
+        "INSTAGRAM_GRAPH_API_VERSION": {
+          "source": "project",
+          "collection_method": "none",
+          "env_var": "INSTAGRAM_GRAPH_API_VERSION"
+        },
+        "FACEBOOK_PAGE_ID": {
+          "source": "user",
+          "collection_method": "prompt",
+          "env_var": "FACEBOOK_PAGE_ID"
+        }
+      }
+    }
+  }
+}
+

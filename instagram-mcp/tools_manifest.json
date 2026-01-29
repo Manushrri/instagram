@@ -1,0 +1,521 @@
+{
+  "tools": [
+    {
+      "id": "CREATE_MEDIA_CONTAINER",
+      "target": "tools.publishing:create_media_container",
+      "description": "Create Media Container. Create a draft media container for photos/videos/reels before publishing. Returns a 'id' field (creation_id) that you must use in CREATE_POST, POST_IG_USER_MEDIA_PUBLISH, or GET_POST_STATUS to publish or check status.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "image_url": {"type": "string", "description": "Image URL for photo post"},
+          "video_url": {"type": "string", "description": "Video URL for video/reel post"},
+          "caption": {"type": "string", "description": "Caption for the media"},
+          "media_type": {"type": "string", "description": "Media type (IMAGE or VIDEO only)"},
+          "content_type": {"type": "string", "description": "Content type (optional)"},
+          "cover_url": {"type": "string", "description": "Cover image URL for video/reel"},
+          "is_carousel_item": {"type": "boolean", "description": "Set True if this media is part of a carousel"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"},
+          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+        }
+      }
+    },
+    {
+      "id": "POST_IG_USER_MEDIA",
+      "target": "tools.publishing:post_ig_user_media",
+      "description": "Post IG User Media. Tool to create a media container for Instagram posts. Use this to create a container for images, videos, Reels, or carousels. Returns a 'id' field (creation_id) that you must use in CREATE_POST, POST_IG_USER_MEDIA_PUBLISH, or GET_POST_STATUS.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "image_url": {"type": "string", "description": "Image URL for photo post"},
+          "video_url": {"type": "string", "description": "Video URL for video/reel post"},
+          "caption": {"type": "string", "description": "Caption for the media"},
+          "media_type": {"type": "string", "description": "Media type (IMAGE or VIDEO)"},
+          "cover_url": {"type": "string", "description": "Cover image URL for video/reel"},
+          "is_carousel_item": {"type": "boolean", "description": "Set True if part of carousel"},
+          "children": {"type": "array", "items": {"type": "string"}, "description": "List of child media container IDs for carousel"},
+          "location_id": {"type": "string", "description": "Location ID to tag"},
+          "user_tags": {"type": "array", "description": "List of user tags (JSON format)"},
+          "thumb_offset": {"type": "integer", "description": "Thumbnail offset for video (seconds)"},
+          "share_to_feed": {"type": "boolean", "description": "Share to feed (for Reels)"},
+          "audio_name": {"type": "string", "description": "Audio name for Reels"},
+          "collaborators": {"type": "array", "items": {"type": "string"}, "description": "List of collaborator user IDs"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"},
+          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+        }
+      }
+    },
+    {
+      "id": "CREATE_CAROUSEL_CONTAINER",
+      "target": "tools.publishing:create_carousel_container",
+      "description": "Create Carousel Container. Create a draft carousel post with multiple images/videos before publishing. First create individual media containers using CREATE_MEDIA_CONTAINER with is_carousel_item=True, then use their 'id' values in the children array.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "children": {"type": "array", "items": {"type": "string"}, "description": "List of child media container IDs"},
+          "child_image_urls": {"type": "array", "items": {"type": "string"}, "description": "List of image URLs to create child containers"},
+          "child_video_urls": {"type": "array", "items": {"type": "string"}, "description": "List of video URLs to create child containers"},
+          "caption": {"type": "string", "description": "Caption for the carousel post"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"},
+          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+        }
+      }
+    },
+    {
+      "id": "GET_POST_STATUS",
+      "target": "tools.publishing:get_post_status",
+      "description": "Get Post Status. Check the processing status of a draft post container. Returns status_code: 'IN_PROGRESS', 'FINISHED', or 'ERROR'. Use this to check if media is ready before calling CREATE_POST.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "creation_id": {"type": "string", "description": "Creation ID from media container"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"}
+        },
+        "required": ["creation_id"]
+      }
+    },
+    {
+      "id": "CREATE_POST",
+      "target": "tools.publishing:create_post",
+      "description": "Create Post. Publish a draft media container to Instagram (final publishing step). Automatically retries with exponential backoff to handle processing delay.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "creation_id": {"type": "string", "description": "Creation ID from media container"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"},
+          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+        },
+        "required": ["creation_id"]
+      }
+    },
+    {
+      "id": "POST_IG_USER_MEDIA_PUBLISH",
+      "target": "tools.publishing:post_ig_user_media_publish",
+      "description": "Publish IG User Media. Publish a media container to an Instagram Business account with automatic polling for container readiness. Rate limited to 25 posts per 24 hours.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "creation_id": {"type": "string", "description": "Creation ID from media container"},
+          "max_wait_seconds": {"type": "integer", "description": "Maximum time to wait for processing (seconds)", "default": 45},
+          "poll_interval_seconds": {"type": "integer", "description": "Interval between status checks (seconds)", "default": 3},
+          "graph_api_version": {"type": "string", "description": "Graph API version"},
+          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+        },
+        "required": ["creation_id"]
+      }
+    },
+    {
+      "id": "GET_USER_INFO",
+      "target": "tools.user:get_user_info",
+      "description": "Get User Info. Get Instagram user info including profile details and statistics.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "graph_api_version": {"type": "string", "description": "Graph API version"},
+          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+        }
+      }
+    },
+    {
+      "id": "GET_USER_INSIGHTS",
+      "target": "tools.insights:get_user_insights",
+      "description": "Get User Insights. Get Instagram account-level insights and analytics (profile views, reach, follower count, etc.). Valid metrics: reach, follower_count, website_clicks, profile_views, online_followers, accounts_engaged, total_interactions, views, etc.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "metric": {"type": "array", "items": {"type": "string"}, "description": "Metrics to retrieve"},
+          "period": {"type": "string", "description": "Aggregation period", "default": "day"},
+          "metric_type": {"type": "string", "description": "Metric type: time_series or total_value"},
+          "breakdown": {"type": "string", "description": "Breakdown (only for metric_type=total_value)"},
+          "since": {"type": "string", "description": "Start date (ISO 8601 format)"},
+          "until": {"type": "string", "description": "End date (ISO 8601 format)"},
+          "timeframe": {"type": "string", "description": "Timeframe (for demographics metrics)"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"},
+          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+        },
+        "required": ["metric"]
+      }
+    },
+    {
+      "id": "GET_USER_MEDIA",
+      "target": "tools.user:get_user_media",
+      "description": "Get User Media. Get Instagram user's media (posts, photos, videos).",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "limit": {"type": "integer", "description": "Number of media items to retrieve", "default": 25},
+          "after": {"type": "string", "description": "Paging cursor: after"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"},
+          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+        }
+      }
+    },
+    {
+      "id": "GET_IG_USER_MEDIA",
+      "target": "tools.user:get_ig_user_media",
+      "description": "Get IG User Media. Get Instagram user's media collection (posts, photos, videos, reels, carousels) with pagination and time-based filtering. Returns media objects with 'id' field for use in other tools.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "fields": {"type": "string", "description": "Fields to return", "default": "id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,username"},
+          "limit": {"type": "integer", "description": "Number of media items to retrieve", "default": 25},
+          "after": {"type": "string", "description": "Paging cursor: after"},
+          "before": {"type": "string", "description": "Paging cursor: before"},
+          "since": {"type": "string", "description": "Filter media created after this timestamp (ISO 8601)"},
+          "until": {"type": "string", "description": "Filter media created before this timestamp (ISO 8601)"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"},
+          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+        }
+      }
+    },
+    {
+      "id": "GET_IG_USER_STORIES",
+      "target": "tools.user:get_ig_user_stories",
+      "description": "Get IG User Stories. Get active story media objects for an Instagram Business or Creator account. Returns stories within the 24-hour window.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "fields": {"type": "string", "description": "Fields to return", "default": "id,media_type,media_url,permalink,timestamp"},
+          "limit": {"type": "integer", "description": "Number of stories to retrieve"},
+          "after": {"type": "string", "description": "Paging cursor: after"},
+          "before": {"type": "string", "description": "Paging cursor: before"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"},
+          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+        }
+      }
+    },
+    {
+      "id": "GET_IG_USER_TAGS",
+      "target": "tools.user:get_ig_user_tags",
+      "description": "Get IG User Tags. Get Instagram media where the user has been tagged by other users.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "fields": {"type": "string", "description": "Fields to return", "default": "id,caption,media_type,media_url,permalink,timestamp,username"},
+          "limit": {"type": "integer", "description": "Number of tagged media items", "default": 25},
+          "after": {"type": "string", "description": "Paging cursor: after"},
+          "before": {"type": "string", "description": "Paging cursor: before"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"},
+          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+        }
+      }
+    },
+    {
+      "id": "GET_IG_USER_CONTENT_PUBLISHING_LIMIT",
+      "target": "tools.user:get_ig_user_content_publishing_limit",
+      "description": "Get IG User Content Publishing Limit. Get an Instagram Business Account's current content publishing usage. Use this to monitor quota usage.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "fields": {"type": "string", "description": "Fields to return", "default": "quota_usage,config"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"},
+          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+        }
+      }
+    },
+    {
+      "id": "GET_IG_USER_LIVE_MEDIA",
+      "target": "tools.user:get_ig_user_live_media",
+      "description": "Get IG User Live Media. Get live media objects during an active Instagram broadcast.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "fields": {"type": "string", "description": "Fields to return", "default": "id,media_type,media_url,timestamp,permalink"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"},
+          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+        }
+      }
+    },
+    {
+      "id": "GET_USER_BY_USERNAME",
+      "target": "tools.user:get_user_by_username",
+      "description": "Get User by Username. Find an Instagram user's ID by their username using Business Discovery API. Works for Business and Creator accounts.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "username": {"type": "string", "description": "Instagram username (without @ symbol)"},
+          "ig_user_id": {"type": "string", "description": "Your Instagram user ID (auto-detected)"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"}
+        },
+        "required": ["username"]
+      }
+    },
+    {
+      "id": "GET_IG_MEDIA",
+      "target": "tools.media:get_ig_media",
+      "description": "Get Instagram Media. Get a published Instagram Media object (photo, video, story, reel, or carousel). NOTE: This is for published media only.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ig_media_id": {"type": "string", "description": "Instagram media ID"},
+          "fields": {"type": "string", "description": "Fields to return"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"}
+        },
+        "required": ["ig_media_id"]
+      }
+    },
+    {
+      "id": "GET_IG_MEDIA_CHILDREN",
+      "target": "tools.media:get_ig_media_children",
+      "description": "Get IG Media Children. Get media objects (images/videos) that are children of an Instagram carousel/album post.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ig_media_id": {"type": "string", "description": "Instagram media ID"},
+          "fields": {"type": "string", "description": "Fields to return"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"}
+        },
+        "required": ["ig_media_id"]
+      }
+    },
+    {
+      "id": "GET_IG_MEDIA_COMMENTS",
+      "target": "tools.media:get_ig_media_comments",
+      "description": "Get IG Media Comments. Retrieve comments on an Instagram media object. Returns comment objects with 'id' field for use in POST_IG_COMMENT_REPLIES or DELETE_COMMENT.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ig_media_id": {"type": "string", "description": "Instagram media ID"},
+          "fields": {"type": "string", "description": "Fields to return"},
+          "limit": {"type": "integer", "description": "Max comments to return", "default": 25},
+          "after": {"type": "string", "description": "Paging cursor: after"},
+          "before": {"type": "string", "description": "Paging cursor: before"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"}
+        },
+        "required": ["ig_media_id"]
+      }
+    },
+    {
+      "id": "GET_POST_COMMENTS",
+      "target": "tools.comments:get_post_comments",
+      "description": "Get Post Comments. Get comments on an Instagram post.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ig_post_id": {"type": "string", "description": "Instagram post ID"},
+          "limit": {"type": "integer", "description": "Number of comments to retrieve", "default": 25},
+          "after": {"type": "string", "description": "Paging cursor: after"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"}
+        },
+        "required": ["ig_post_id"]
+      }
+    },
+    {
+      "id": "GET_POST_INSIGHTS",
+      "target": "tools.insights:get_post_insights",
+      "description": "Get Post Insights. Get Instagram post insights/analytics (impressions, reach, engagement, etc.).",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ig_post_id": {"type": "string", "description": "Instagram post ID"},
+          "metric_preset": {"type": "string", "description": "Metric preset to use", "default": "auto_safe"},
+          "metric": {"type": "array", "items": {"type": "string"}, "description": "Specific metrics (overrides preset)"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"}
+        },
+        "required": ["ig_post_id"]
+      }
+    },
+    {
+      "id": "POST_IG_MEDIA_COMMENTS",
+      "target": "tools.comments:post_ig_media_comments",
+      "description": "Post IG Media Comments. Create a comment on an Instagram media object. Comment must be 300 characters or less, max 4 hashtags, max 1 URL.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ig_media_id": {"type": "string", "description": "Instagram media ID"},
+          "message": {"type": "string", "description": "Comment message (max 300 chars)"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"}
+        },
+        "required": ["ig_media_id", "message"]
+      }
+    },
+    {
+      "id": "POST_IG_COMMENT_REPLIES",
+      "target": "tools.comments:post_ig_comment_replies",
+      "description": "Post IG Comment Replies. Create a reply to an Instagram comment. Reply must be 300 characters or less, max 4 hashtags, max 1 URL.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ig_comment_id": {"type": "string", "description": "Instagram comment ID to reply to"},
+          "message": {"type": "string", "description": "Reply message (max 300 chars)"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"}
+        },
+        "required": ["ig_comment_id", "message"]
+      }
+    },
+    {
+      "id": "POST_IG_USER_MENTIONS",
+      "target": "tools.comments:post_ig_user_mentions",
+      "description": "Reply to IG User Mentions. Reply to a mention of your Instagram Business or Creator account.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "media_id": {"type": "string", "description": "Media ID where the mention is located"},
+          "message": {"type": "string", "description": "Reply message (max 300 chars)"},
+          "comment_id": {"type": "string", "description": "Comment ID if replying to a comment mention"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"},
+          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+        },
+        "required": ["media_id", "message"]
+      }
+    },
+    {
+      "id": "REPLY_TO_COMMENT",
+      "target": "tools.comments:reply_to_comment",
+      "description": "Reply To Comment. Reply to a comment on Instagram media.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ig_comment_id": {"type": "string", "description": "Instagram comment ID to reply to"},
+          "message": {"type": "string", "description": "Reply message"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"}
+        },
+        "required": ["ig_comment_id", "message"]
+      }
+    },
+    {
+      "id": "GET_IG_COMMENT_REPLIES",
+      "target": "tools.comments:get_ig_comment_replies",
+      "description": "Get IG Comment Replies. Get replies to a specific Instagram comment.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ig_comment_id": {"type": "string", "description": "Instagram comment ID"},
+          "fields": {"type": "string", "description": "Fields to return"},
+          "limit": {"type": "integer", "description": "Max replies to return", "default": 25},
+          "after": {"type": "string", "description": "Paging cursor: after"},
+          "before": {"type": "string", "description": "Paging cursor: before"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"}
+        },
+        "required": ["ig_comment_id"]
+      }
+    },
+    {
+      "id": "DELETE_COMMENT",
+      "target": "tools.comments:delete_comment",
+      "description": "Delete Comment. Delete a comment on Instagram media. You can only delete comments that your account created.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ig_comment_id": {"type": "string", "description": "Instagram comment ID to delete"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"}
+        },
+        "required": ["ig_comment_id"]
+      }
+    },
+    {
+      "id": "GET_IG_MEDIA_INSIGHTS",
+      "target": "tools.insights:get_ig_media_insights",
+      "description": "Get IG Media Insights. Get insights and metrics for Instagram media objects. IMPORTANT: In Graph API v22.0+, 'impressions' is no longer supported. Use 'reach' instead.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ig_media_id": {"type": "string", "description": "Instagram media ID"},
+          "metric": {"type": "array", "items": {"type": "string"}, "description": "Metrics to retrieve (reach, likes, comments, shares, saved, video_views, plays, etc.)"},
+          "period": {"type": "string", "description": "Aggregation period", "default": "lifetime"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"}
+        },
+        "required": ["ig_media_id", "metric"]
+      }
+    },
+    {
+      "id": "GET_CONVERSATION",
+      "target": "tools.messaging:get_conversation",
+      "description": "Get Conversation. Get details about a specific Instagram DM conversation (participants, etc).",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "conversation_id": {"type": "string", "description": "Conversation ID"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"}
+        },
+        "required": ["conversation_id"]
+      }
+    },
+    {
+      "id": "GET_CONVERSATIONS",
+      "target": "tools.messaging:get_conversations",
+      "description": "Get Conversations. List Instagram DM conversations to find conversation IDs. Returns conversation objects with 'id' field and 'participants' array.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "page_id": {"type": "string", "description": "Facebook Page ID (auto-detected)"},
+          "limit": {"type": "integer", "description": "Number of conversations to retrieve"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"}
+        }
+      }
+    },
+    {
+      "id": "LIST_ALL_CONVERSATIONS",
+      "target": "tools.messaging:list_all_conversations",
+      "description": "List All Conversations. List all Instagram DM conversations for the authenticated user. Returns conversation objects with 'id' field and 'participants' array.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "limit": {"type": "integer", "description": "Number of conversations to retrieve", "default": 25},
+          "after": {"type": "string", "description": "Paging cursor: after"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"},
+          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+        }
+      }
+    },
+    {
+      "id": "LIST_ALL_MESSAGES",
+      "target": "tools.messaging:list_all_messages",
+      "description": "List All Messages. List all messages from a specific Instagram DM conversation.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "conversation_id": {"type": "string", "description": "Conversation ID"},
+          "limit": {"type": "integer", "description": "Number of messages to retrieve", "default": 25},
+          "after": {"type": "string", "description": "Paging cursor: after"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"}
+        },
+        "required": ["conversation_id"]
+      }
+    },
+    {
+      "id": "SEND_TEXT_MESSAGE",
+      "target": "tools.messaging:send_text_message",
+      "description": "Send Text Message. Send a text message to an Instagram user via DM.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "recipient_id": {"type": "string", "description": "Recipient Instagram user ID"},
+          "text": {"type": "string", "description": "Text message to send"},
+          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"},
+          "reply_to_message_id": {"type": "string", "description": "Message ID to reply to"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"}
+        },
+        "required": ["recipient_id", "text"]
+      }
+    },
+    {
+      "id": "SEND_IMAGE",
+      "target": "tools.messaging:send_image",
+      "description": "Send Image. Send an image via Instagram DM to a specific user.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "recipient_id": {"type": "string", "description": "Recipient Instagram user ID"},
+          "image_url": {"type": "string", "description": "Image URL to send"},
+          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"}
+        },
+        "required": ["recipient_id", "image_url"]
+      }
+    },
+    {
+      "id": "MARK_SEEN",
+      "target": "tools.messaging:mark_seen",
+      "description": "Mark Seen. Mark Instagram DM messages as read/seen for a specific user.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "recipient_id": {"type": "string", "description": "Recipient Instagram user ID"},
+          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"},
+          "graph_api_version": {"type": "string", "description": "Graph API version"}
+        },
+        "required": ["recipient_id"]
+      }
+    }
+  ]
+}
