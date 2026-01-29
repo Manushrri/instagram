@@ -13,9 +13,7 @@
           "media_type": {"type": "string", "description": "Media type (IMAGE or VIDEO only)"},
           "content_type": {"type": "string", "description": "Content type (optional)"},
           "cover_url": {"type": "string", "description": "Cover image URL for video/reel"},
-          "is_carousel_item": {"type": "boolean", "description": "Set True if this media is part of a carousel"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"},
-          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+          "is_carousel_item": {"type": "boolean", "description": "Set True if this media is part of a carousel"}
         }
       }
     },
@@ -38,9 +36,7 @@
           "thumb_offset": {"type": "integer", "description": "Thumbnail offset for video (seconds)"},
           "share_to_feed": {"type": "boolean", "description": "Share to feed (for Reels)"},
           "audio_name": {"type": "string", "description": "Audio name for Reels"},
-          "collaborators": {"type": "array", "items": {"type": "string"}, "description": "List of collaborator user IDs"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"},
-          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+          "collaborators": {"type": "array", "items": {"type": "string"}, "description": "List of collaborator user IDs"}
         }
       }
     },
@@ -54,9 +50,7 @@
           "children": {"type": "array", "items": {"type": "string"}, "description": "List of child media container IDs - get from CREATE_MEDIA_CONTAINER responses (each made with is_carousel_item=True)"},
           "child_image_urls": {"type": "array", "items": {"type": "string"}, "description": "List of image URLs to auto-create child containers"},
           "child_video_urls": {"type": "array", "items": {"type": "string"}, "description": "List of video URLs to auto-create child containers"},
-          "caption": {"type": "string", "description": "Caption for the carousel post"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"},
-          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+          "caption": {"type": "string", "description": "Caption for the carousel post"}
         }
       }
     },
@@ -67,8 +61,7 @@
       "input_schema": {
         "type": "object",
         "properties": {
-          "creation_id": {"type": "string", "description": "Creation ID - get from CREATE_MEDIA_CONTAINER or CREATE_CAROUSEL_CONTAINER response 'id' field"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"}
+          "creation_id": {"type": "string", "description": "Creation ID - get from CREATE_MEDIA_CONTAINER or CREATE_CAROUSEL_CONTAINER response 'id' field"}
         },
         "required": ["creation_id"]
       }
@@ -80,9 +73,7 @@
       "input_schema": {
         "type": "object",
         "properties": {
-          "creation_id": {"type": "string", "description": "Creation ID - get from CREATE_MEDIA_CONTAINER or CREATE_CAROUSEL_CONTAINER response 'id' field"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"},
-          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+          "creation_id": {"type": "string", "description": "Creation ID - get from CREATE_MEDIA_CONTAINER or CREATE_CAROUSEL_CONTAINER response 'id' field"}
         },
         "required": ["creation_id"]
       }
@@ -96,9 +87,7 @@
         "properties": {
           "creation_id": {"type": "string", "description": "Creation ID - get from CREATE_MEDIA_CONTAINER response 'id' field"},
           "max_wait_seconds": {"type": "integer", "description": "Maximum time to wait for processing (seconds)", "default": 45},
-          "poll_interval_seconds": {"type": "integer", "description": "Interval between status checks (seconds)", "default": 3},
-          "graph_api_version": {"type": "string", "description": "Graph API version"},
-          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+          "poll_interval_seconds": {"type": "integer", "description": "Interval between status checks (seconds)", "default": 3}
         },
         "required": ["creation_id"]
       }
@@ -106,13 +95,10 @@
     {
       "id": "GET_USER_INFO",
       "target": "tools.user:get_user_info",
-      "description": "Get User Info. Get Instagram user info including profile details and statistics. RETURNS: User profile with 'id' (instagram_user_id - auto-detected so rarely needed), username, biography, profile_picture_url, followers_count, follows_count, media_count. The ig_user_id parameter is auto-detected from your access token - you typically don't need to provide it.",
+      "description": "Get User Info. Get Instagram user info including profile details and statistics. RETURNS: User profile with 'id' (instagram_user_id), username, biography, profile_picture_url, followers_count, follows_count, media_count. All parameters are auto-detected.",
       "input_schema": {
         "type": "object",
-        "properties": {
-          "graph_api_version": {"type": "string", "description": "Graph API version"},
-          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
-        }
+        "properties": {}
       }
     },
     {
@@ -128,9 +114,7 @@
           "breakdown": {"type": "string", "description": "Breakdown (only for metric_type=total_value)"},
           "since": {"type": "string", "description": "Start date (ISO 8601 format)"},
           "until": {"type": "string", "description": "End date (ISO 8601 format)"},
-          "timeframe": {"type": "string", "description": "Timeframe (for demographics metrics)"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"},
-          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+          "timeframe": {"type": "string", "description": "Timeframe (for demographics metrics)"}
         },
         "required": ["metric"]
       }
@@ -143,9 +127,7 @@
         "type": "object",
         "properties": {
           "limit": {"type": "integer", "description": "Number of media items to retrieve", "default": 25},
-          "after": {"type": "string", "description": "Paging cursor: after - get from previous response's paging.cursors.after"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"},
-          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+          "after": {"type": "string", "description": "Paging cursor: after - get from previous response's paging.cursors.after"}
         }
       }
     },
@@ -161,9 +143,7 @@
           "after": {"type": "string", "description": "Paging cursor: after"},
           "before": {"type": "string", "description": "Paging cursor: before"},
           "since": {"type": "string", "description": "Filter media created after this timestamp (ISO 8601)"},
-          "until": {"type": "string", "description": "Filter media created before this timestamp (ISO 8601)"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"},
-          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+          "until": {"type": "string", "description": "Filter media created before this timestamp (ISO 8601)"}
         }
       }
     },
@@ -177,9 +157,7 @@
           "fields": {"type": "string", "description": "Fields to return", "default": "id,media_type,media_url,permalink,timestamp"},
           "limit": {"type": "integer", "description": "Number of stories to retrieve"},
           "after": {"type": "string", "description": "Paging cursor: after"},
-          "before": {"type": "string", "description": "Paging cursor: before"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"},
-          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+          "before": {"type": "string", "description": "Paging cursor: before"}
         }
       }
     },
@@ -193,9 +171,7 @@
           "fields": {"type": "string", "description": "Fields to return", "default": "id,caption,media_type,media_url,permalink,timestamp,username"},
           "limit": {"type": "integer", "description": "Number of tagged media items", "default": 25},
           "after": {"type": "string", "description": "Paging cursor: after"},
-          "before": {"type": "string", "description": "Paging cursor: before"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"},
-          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+          "before": {"type": "string", "description": "Paging cursor: before"}
         }
       }
     },
@@ -206,9 +182,7 @@
       "input_schema": {
         "type": "object",
         "properties": {
-          "fields": {"type": "string", "description": "Fields to return", "default": "quota_usage,config"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"},
-          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+          "fields": {"type": "string", "description": "Fields to return", "default": "quota_usage,config"}
         }
       }
     },
@@ -219,9 +193,7 @@
       "input_schema": {
         "type": "object",
         "properties": {
-          "fields": {"type": "string", "description": "Fields to return", "default": "id,media_type,media_url,timestamp,permalink"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"},
-          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+          "fields": {"type": "string", "description": "Fields to return", "default": "id,media_type,media_url,timestamp,permalink"}
         }
       }
     },
@@ -232,9 +204,7 @@
       "input_schema": {
         "type": "object",
         "properties": {
-          "username": {"type": "string", "description": "Instagram username (without @ symbol)"},
-          "ig_user_id": {"type": "string", "description": "Your Instagram user ID (auto-detected)"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"}
+          "username": {"type": "string", "description": "Instagram username (without @ symbol)"}
         },
         "required": ["username"]
       }
@@ -247,8 +217,7 @@
         "type": "object",
         "properties": {
           "ig_media_id": {"type": "string", "description": "Instagram media ID - get from GET_USER_MEDIA or CREATE_POST response 'id' field"},
-          "fields": {"type": "string", "description": "Fields to return"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"}
+          "fields": {"type": "string", "description": "Fields to return"}
         },
         "required": ["ig_media_id"]
       }
@@ -261,8 +230,7 @@
         "type": "object",
         "properties": {
           "ig_media_id": {"type": "string", "description": "Instagram carousel media ID - get from GET_USER_MEDIA response 'id' field"},
-          "fields": {"type": "string", "description": "Fields to return"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"}
+          "fields": {"type": "string", "description": "Fields to return"}
         },
         "required": ["ig_media_id"]
       }
@@ -278,8 +246,7 @@
           "fields": {"type": "string", "description": "Fields to return"},
           "limit": {"type": "integer", "description": "Max comments to return", "default": 25},
           "after": {"type": "string", "description": "Paging cursor: after"},
-          "before": {"type": "string", "description": "Paging cursor: before"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"}
+          "before": {"type": "string", "description": "Paging cursor: before"}
         },
         "required": ["ig_media_id"]
       }
@@ -293,8 +260,7 @@
         "properties": {
           "ig_post_id": {"type": "string", "description": "Instagram post ID - get from GET_USER_MEDIA or CREATE_POST response 'id' field"},
           "limit": {"type": "integer", "description": "Number of comments to retrieve", "default": 25},
-          "after": {"type": "string", "description": "Paging cursor: after"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"}
+          "after": {"type": "string", "description": "Paging cursor: after"}
         },
         "required": ["ig_post_id"]
       }
@@ -308,8 +274,7 @@
         "properties": {
           "ig_post_id": {"type": "string", "description": "Instagram post ID - get from GET_USER_MEDIA or CREATE_POST response 'id' field (must be published, not container)"},
           "metric_preset": {"type": "string", "description": "Metric preset: auto_safe (default), or specific metrics", "default": "auto_safe"},
-          "metric": {"type": "array", "items": {"type": "string"}, "description": "Specific metrics (overrides preset): reach, likes, comments, shares, saved"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"}
+          "metric": {"type": "array", "items": {"type": "string"}, "description": "Specific metrics (overrides preset): reach, likes, comments, shares, saved"}
         },
         "required": ["ig_post_id"]
       }
@@ -322,8 +287,7 @@
         "type": "object",
         "properties": {
           "ig_media_id": {"type": "string", "description": "Instagram media ID - get from GET_USER_MEDIA or CREATE_POST response 'id' field"},
-          "message": {"type": "string", "description": "Comment message (max 300 chars, max 4 hashtags, max 1 URL)"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"}
+          "message": {"type": "string", "description": "Comment message (max 300 chars, max 4 hashtags, max 1 URL)"}
         },
         "required": ["ig_media_id", "message"]
       }
@@ -336,8 +300,7 @@
         "type": "object",
         "properties": {
           "ig_comment_id": {"type": "string", "description": "Instagram comment ID to reply to - get from GET_IG_MEDIA_COMMENTS or GET_POST_COMMENTS response 'id' field"},
-          "message": {"type": "string", "description": "Reply message (max 300 chars, max 4 hashtags, max 1 URL)"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"}
+          "message": {"type": "string", "description": "Reply message (max 300 chars, max 4 hashtags, max 1 URL)"}
         },
         "required": ["ig_comment_id", "message"]
       }
@@ -351,9 +314,7 @@
         "properties": {
           "media_id": {"type": "string", "description": "Media ID where the mention is located"},
           "message": {"type": "string", "description": "Reply message (max 300 chars)"},
-          "comment_id": {"type": "string", "description": "Comment ID if replying to a comment mention - get from GET_IG_MEDIA_COMMENTS response 'id' field"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"},
-          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+          "comment_id": {"type": "string", "description": "Comment ID if replying to a comment mention - get from GET_IG_MEDIA_COMMENTS response 'id' field"}
         },
         "required": ["media_id", "message"]
       }
@@ -366,8 +327,7 @@
         "type": "object",
         "properties": {
           "ig_comment_id": {"type": "string", "description": "Instagram comment ID to reply to - get from GET_IG_MEDIA_COMMENTS or GET_POST_COMMENTS response 'id' field"},
-          "message": {"type": "string", "description": "Reply message"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"}
+          "message": {"type": "string", "description": "Reply message"}
         },
         "required": ["ig_comment_id", "message"]
       }
@@ -383,8 +343,7 @@
           "fields": {"type": "string", "description": "Fields to return"},
           "limit": {"type": "integer", "description": "Max replies to return", "default": 25},
           "after": {"type": "string", "description": "Paging cursor: after"},
-          "before": {"type": "string", "description": "Paging cursor: before"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"}
+          "before": {"type": "string", "description": "Paging cursor: before"}
         },
         "required": ["ig_comment_id"]
       }
@@ -396,8 +355,7 @@
       "input_schema": {
         "type": "object",
         "properties": {
-          "ig_comment_id": {"type": "string", "description": "Instagram comment ID to delete - get from GET_IG_MEDIA_COMMENTS or GET_POST_COMMENTS response 'id' field"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"}
+          "ig_comment_id": {"type": "string", "description": "Instagram comment ID to delete - get from GET_IG_MEDIA_COMMENTS or GET_POST_COMMENTS response 'id' field"}
         },
         "required": ["ig_comment_id"]
       }
@@ -411,8 +369,7 @@
         "properties": {
           "ig_media_id": {"type": "string", "description": "Instagram media ID - get from GET_USER_MEDIA or CREATE_POST response 'id' field (MUST be published post, NOT container)"},
           "metric": {"type": "array", "items": {"type": "string"}, "description": "Metrics to retrieve: reach, likes, comments, shares, saved, video_views, plays. Note: 'impressions' NOT supported in v22.0+"},
-          "period": {"type": "string", "description": "Aggregation period", "default": "lifetime"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"}
+          "period": {"type": "string", "description": "Aggregation period", "default": "lifetime"}
         },
         "required": ["ig_media_id", "metric"]
       }
@@ -424,8 +381,7 @@
       "input_schema": {
         "type": "object",
         "properties": {
-          "conversation_id": {"type": "string", "description": "Conversation ID - get from LIST_ALL_CONVERSATIONS response 'id' field"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"}
+          "conversation_id": {"type": "string", "description": "Conversation ID - get from LIST_ALL_CONVERSATIONS response 'id' field"}
         },
         "required": ["conversation_id"]
       }
@@ -438,8 +394,7 @@
         "type": "object",
         "properties": {
           "page_id": {"type": "string", "description": "Facebook Page ID (auto-detected from stored tokens)"},
-          "limit": {"type": "integer", "description": "Number of conversations to retrieve"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"}
+          "limit": {"type": "integer", "description": "Number of conversations to retrieve"}
         }
       }
     },
@@ -451,9 +406,7 @@
         "type": "object",
         "properties": {
           "limit": {"type": "integer", "description": "Number of conversations to retrieve", "default": 25},
-          "after": {"type": "string", "description": "Paging cursor: after - get from previous response's paging.cursors.after"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"},
-          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"}
+          "after": {"type": "string", "description": "Paging cursor: after - get from previous response's paging.cursors.after"}
         }
       }
     },
@@ -466,8 +419,7 @@
         "properties": {
           "conversation_id": {"type": "string", "description": "Conversation ID - get from LIST_ALL_CONVERSATIONS response 'id' field"},
           "limit": {"type": "integer", "description": "Number of messages to retrieve", "default": 25},
-          "after": {"type": "string", "description": "Paging cursor: after"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"}
+          "after": {"type": "string", "description": "Paging cursor: after"}
         },
         "required": ["conversation_id"]
       }
@@ -481,9 +433,7 @@
         "properties": {
           "recipient_id": {"type": "string", "description": "Recipient Instagram user ID - get from LIST_ALL_CONVERSATIONS->participants->'id' OR GET_USER_BY_USERNAME->'instagram_user_id'"},
           "text": {"type": "string", "description": "Text message to send"},
-          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"},
-          "reply_to_message_id": {"type": "string", "description": "Message ID to reply to - get from LIST_ALL_MESSAGES response 'id' field"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"}
+          "reply_to_message_id": {"type": "string", "description": "Message ID to reply to - get from LIST_ALL_MESSAGES response 'id' field"}
         },
         "required": ["recipient_id", "text"]
       }
@@ -496,9 +446,7 @@
         "type": "object",
         "properties": {
           "recipient_id": {"type": "string", "description": "Recipient Instagram user ID - get from LIST_ALL_CONVERSATIONS->participants->'id' OR GET_USER_BY_USERNAME->'instagram_user_id'"},
-          "image_url": {"type": "string", "description": "Public image URL to send"},
-          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"}
+          "image_url": {"type": "string", "description": "Public image URL to send"}
         },
         "required": ["recipient_id", "image_url"]
       }
@@ -510,9 +458,7 @@
       "input_schema": {
         "type": "object",
         "properties": {
-          "recipient_id": {"type": "string", "description": "Recipient Instagram user ID - get from LIST_ALL_CONVERSATIONS->participants->'id' OR GET_USER_BY_USERNAME->'instagram_user_id'"},
-          "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"},
-          "graph_api_version": {"type": "string", "description": "Graph API version"}
+          "recipient_id": {"type": "string", "description": "Recipient Instagram user ID - get from LIST_ALL_CONVERSATIONS->participants->'id' OR GET_USER_BY_USERNAME->'instagram_user_id'"}
         },
         "required": ["recipient_id"]
       }
