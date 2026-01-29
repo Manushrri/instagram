@@ -595,12 +595,10 @@ def INSTAGRAM_CREATE_MEDIA_CONTAINER(
     content_type: Annotated[Optional[str], "Content type (optional)"] = None,
     cover_url: Annotated[Optional[str], "Cover image URL for video/reel (optional)"] = None,
     is_carousel_item: Annotated[Optional[bool], "Set True if this media is part of a carousel"] = None,
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
-    ig_user_id: Annotated[Optional[str], "Instagram user ID (optional, auto-detected from access token)"] = None,
 ):
     """Create a draft media container for photos/videos/reels before publishing."""
     try:
-        ig_user_id = _get_instagram_user_id(ig_user_id)
+        ig_user_id = _get_instagram_user_id(None)
         
         # Validate that either image_url or video_url is provided
         if not image_url and not video_url:
@@ -645,19 +643,7 @@ def INSTAGRAM_CREATE_MEDIA_CONTAINER(
         if caption:
             params["caption"] = caption
         
-        if graph_api_version:
-            # Temporarily override version for this request
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("POST", f"{ig_user_id}/media", data=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("POST", f"{ig_user_id}/media", data=params)
+        result = make_api_request("POST", f"{ig_user_id}/media", data=params)
         
         return {
             "data": result,
@@ -690,12 +676,10 @@ def INSTAGRAM_POST_IG_USER_MEDIA(
     share_to_feed: Annotated[Optional[bool], "Share to feed (for Reels)"] = None,
     audio_name: Annotated[Optional[str], "Audio name for Reels"] = None,
     collaborators: Annotated[Optional[List[str]], "List of collaborator user IDs"] = None,
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
-    ig_user_id: Annotated[Optional[str], "Instagram user ID (optional, auto-detected from access token)"] = None,
 ):
     """Create a media container for Instagram posts."""
     try:
-        ig_user_id = _get_instagram_user_id(ig_user_id)
+        ig_user_id = _get_instagram_user_id(None)
         
         # Validate that either image_url or video_url is provided
         if not image_url and not video_url and not children:
@@ -742,18 +726,7 @@ def INSTAGRAM_POST_IG_USER_MEDIA(
         if collaborators:
             params["collaborators"] = ",".join(collaborators) if isinstance(collaborators, list) else collaborators
         
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("POST", f"{ig_user_id}/media", data=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("POST", f"{ig_user_id}/media", data=params)
+        result = make_api_request("POST", f"{ig_user_id}/media", data=params)
         
         return {
             "data": result,
@@ -779,12 +752,10 @@ def INSTAGRAM_CREATE_CAROUSEL_CONTAINER(
     child_video_files: Annotated[Optional[List[str]], "List of local video file paths (not supported yet)"] = None,
     child_video_urls: Annotated[Optional[List[str]], "List of video URLs to create child containers"] = None,
     caption: Annotated[Optional[str], "Caption for the carousel post"] = None,
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
-    ig_user_id: Annotated[Optional[str], "Instagram user ID (optional, auto-detected from access token)"] = None,
 ):
     """Create a draft carousel post with multiple images/videos before publishing."""
     try:
-        ig_user_id = _get_instagram_user_id(ig_user_id)
+        ig_user_id = _get_instagram_user_id(None)
 
         if child_image_files or child_video_files:
             raise ValueError("Local file uploads are not supported. Use child_image_urls or child_video_urls.")
@@ -813,35 +784,22 @@ def INSTAGRAM_CREATE_CAROUSEL_CONTAINER(
                 raise ValueError("Failed to create child media container.")
             return creation_id
 
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-        else:
-            original_version = None
+        if not children:
+            children = []
+            for url in child_image_urls:
+                children.append(_create_child_container(url, "IMAGE"))
+            for url in child_video_urls:
+                children.append(_create_child_container(url, "VIDEO"))
 
-        try:
-            if not children:
-                children = []
-                for url in child_image_urls:
-                    children.append(_create_child_container(url, "IMAGE"))
-                for url in child_video_urls:
-                    children.append(_create_child_container(url, "VIDEO"))
+        params = {
+            "media_type": "CAROUSEL",
+            "children": ",".join(children),
+        }
 
-            params = {
-                "media_type": "CAROUSEL",
-                "children": ",".join(children),
-            }
+        if caption:
+            params["caption"] = caption
 
-            if caption:
-                params["caption"] = caption
-
-            result = make_api_request("POST", f"{ig_user_id}/media", data=params)
-        finally:
-            if graph_api_version:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
+        result = make_api_request("POST", f"{ig_user_id}/media", data=params)
         
         return {
             "data": result,
@@ -862,7 +820,6 @@ def INSTAGRAM_CREATE_CAROUSEL_CONTAINER(
 )
 def INSTAGRAM_GET_POST_STATUS(
     creation_id: Annotated[str, "Creation ID from media container (required)"],
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
 ):
     """Check the processing status of a draft post container."""
     try:
@@ -872,18 +829,7 @@ def INSTAGRAM_GET_POST_STATUS(
             "fields": "status_code"
         }
         
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("GET", creation_id, params=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("GET", creation_id, params=params)
+        result = make_api_request("GET", creation_id, params=params)
         
         return {
             "data": result,
@@ -913,13 +859,11 @@ def INSTAGRAM_GET_POST_STATUS(
 )
 def INSTAGRAM_CREATE_POST(
     creation_id: Annotated[str, "Creation_id from media container (required)"],
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
-    ig_user_id: Annotated[Optional[str], "Instagram user ID (optional, auto-detected from access token)"] = None,
 ):
     """Publish a draft media container to Instagram (final publishing step)."""
     try:
         _validate_required({"creation_id": creation_id}, ["creation_id"])
-        ig_user_id = _get_instagram_user_id(ig_user_id)
+        ig_user_id = _get_instagram_user_id(None)
         
         # Check status first and wait if needed
         max_retries = 15
@@ -928,18 +872,7 @@ def INSTAGRAM_CREATE_POST(
         for attempt in range(max_retries):
             # Avoid calling the tool wrapper directly; query status via API.
             status_params = {"fields": "status_code"}
-            if graph_api_version:
-                original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-                os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-                try:
-                    status_data = make_api_request("GET", creation_id, params=status_params)
-                finally:
-                    if original_version:
-                        os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                    elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                        del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-            else:
-                status_data = make_api_request("GET", creation_id, params=status_params)
+            status_data = make_api_request("GET", creation_id, params=status_params)
 
             status_code = status_data.get("status_code")
             if status_code == "FINISHED":
@@ -960,18 +893,7 @@ def INSTAGRAM_CREATE_POST(
             "creation_id": creation_id,
         }
         
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("POST", f"{ig_user_id}/media_publish", data=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("POST", f"{ig_user_id}/media_publish", data=params)
+        result = make_api_request("POST", f"{ig_user_id}/media_publish", data=params)
         
         return {
             "data": result,
@@ -994,13 +916,11 @@ def INSTAGRAM_POST_IG_USER_MEDIA_PUBLISH(
     creation_id: Annotated[str, "Creation ID from media container (required)"],
     max_wait_seconds: Annotated[Optional[int], "Maximum time to wait for processing (seconds)"] = 45,
     poll_interval_seconds: Annotated[Optional[int], "Interval between status checks (seconds)"] = 3,
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
-    ig_user_id: Annotated[Optional[str], "Instagram user ID (optional, auto-detected from access token)"] = None,
 ):
     """Publish a media container to an Instagram Business account with automatic polling."""
     try:
         _validate_required({"creation_id": creation_id}, ["creation_id"])
-        ig_user_id = _get_instagram_user_id(ig_user_id)
+        ig_user_id = _get_instagram_user_id(None)
         
         # Limit max_wait to stay under typical MCP client timeout (60s)
         # Reserve some time for the actual publish call
@@ -1022,18 +942,7 @@ def INSTAGRAM_POST_IG_USER_MEDIA_PUBLISH(
             
             # Check status
             status_params = {"fields": "status_code"}
-            if graph_api_version:
-                original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-                os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-                try:
-                    status_data = make_api_request("GET", creation_id, params=status_params)
-                finally:
-                    if original_version:
-                        os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                    elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                        del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-            else:
-                status_data = make_api_request("GET", creation_id, params=status_params)
+            status_data = make_api_request("GET", creation_id, params=status_params)
             
             status_code = status_data.get("status_code")
             if status_code == "FINISHED":
@@ -1051,18 +960,7 @@ def INSTAGRAM_POST_IG_USER_MEDIA_PUBLISH(
         
         # Final status check
         status_params = {"fields": "status_code"}
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                final_status = make_api_request("GET", creation_id, params=status_params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            final_status = make_api_request("GET", creation_id, params=status_params)
+        final_status = make_api_request("GET", creation_id, params=status_params)
         
         if final_status.get("status_code") != "FINISHED":
             return {
@@ -1076,18 +974,7 @@ def INSTAGRAM_POST_IG_USER_MEDIA_PUBLISH(
             "creation_id": creation_id,
         }
         
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("POST", f"{ig_user_id}/media_publish", data=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("POST", f"{ig_user_id}/media_publish", data=params)
+        result = make_api_request("POST", f"{ig_user_id}/media_publish", data=params)
         
         return {
             "data": result,
@@ -1116,29 +1003,16 @@ def INSTAGRAM_POST_IG_USER_MEDIA_PUBLISH(
     description="Get User Info. Get Instagram user info including profile details and statistics. RETURNS: User profile with 'id' (instagram_user_id - auto-detected so rarely needed), username, biography, profile_picture_url, followers_count, follows_count, media_count. The ig_user_id parameter is auto-detected from your access token - you typically don't need to provide it.",
 )
 def INSTAGRAM_GET_USER_INFO(
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
-    ig_user_id: Annotated[Optional[str], "Instagram user ID (optional, auto-detected from access token)"] = None,
 ):
     """Get Instagram user info including profile details and statistics."""
     try:
-        ig_user_id = _get_instagram_user_id(ig_user_id)
+        ig_user_id = _get_instagram_user_id(None)
         
         params = {
             "fields": "id,username,website,biography,profile_picture_url,followers_count,follows_count,media_count"
         }
         
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("GET", ig_user_id, params=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("GET", ig_user_id, params=params)
+        result = make_api_request("GET", ig_user_id, params=params)
         
         return {
             "data": result,
@@ -1171,13 +1045,11 @@ def INSTAGRAM_GET_USER_INSIGHTS(
     since: Annotated[Optional[str], "Start date (ISO 8601 format)"] = None,
     until: Annotated[Optional[str], "End date (ISO 8601 format)"] = None,
     timeframe: Annotated[Optional[str], "Timeframe (required for demographics-related metrics)"] = None,
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
-    ig_user_id: Annotated[Optional[str], "Instagram user ID (optional, auto-detected from access token)"] = None,
 ):
     """Get Instagram account-level insights and analytics."""
     try:
         _validate_required({"metric": metric}, ["metric"])
-        ig_user_id = _get_instagram_user_id(ig_user_id)
+        ig_user_id = _get_instagram_user_id(None)
         
         params = {
             "metric": ",".join(metric),
@@ -1195,18 +1067,7 @@ def INSTAGRAM_GET_USER_INSIGHTS(
         if timeframe:
             params["timeframe"] = timeframe
         
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("GET", f"{ig_user_id}/insights", params=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("GET", f"{ig_user_id}/insights", params=params)
+        result = make_api_request("GET", f"{ig_user_id}/insights", params=params)
         
         return {
             "data": result.get("data", []),
@@ -1246,12 +1107,10 @@ def INSTAGRAM_GET_USER_INSIGHTS(
 def INSTAGRAM_GET_USER_MEDIA(
     limit: Annotated[Optional[int], "Number of media items to retrieve"] = 25,
     after: Annotated[Optional[str], "Paging cursor: after"] = None,
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
-    ig_user_id: Annotated[Optional[str], "Instagram user ID (optional, auto-detected from access token)"] = None,
 ):
     """Get Instagram user's media (posts, photos, videos)."""
     try:
-        ig_user_id = _get_instagram_user_id(ig_user_id)
+        ig_user_id = _get_instagram_user_id(None)
         
         params = {}
         
@@ -1260,18 +1119,7 @@ def INSTAGRAM_GET_USER_MEDIA(
         if after:
             params["after"] = after
         
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("GET", f"{ig_user_id}/media", params=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("GET", f"{ig_user_id}/media", params=params)
+        result = make_api_request("GET", f"{ig_user_id}/media", params=params)
         
         return {
             "data": result.get("data", []),
@@ -1299,12 +1147,10 @@ def INSTAGRAM_GET_IG_USER_MEDIA(
     before: Annotated[Optional[str], "Paging cursor: before"] = None,
     since: Annotated[Optional[str], "Filter media created after this timestamp (ISO 8601 format)"] = None,
     until: Annotated[Optional[str], "Filter media created before this timestamp (ISO 8601 format)"] = None,
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
-    ig_user_id: Annotated[Optional[str], "Instagram user ID (optional, auto-detected from access token)"] = None,
 ):
     """Get Instagram user's media collection with pagination and time-based filtering."""
     try:
-        ig_user_id = _get_instagram_user_id(ig_user_id)
+        ig_user_id = _get_instagram_user_id(None)
         
         params = {
             "fields": fields or "id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,username"
@@ -1321,18 +1167,7 @@ def INSTAGRAM_GET_IG_USER_MEDIA(
         if until:
             params["until"] = until
         
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("GET", f"{ig_user_id}/media", params=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("GET", f"{ig_user_id}/media", params=params)
+        result = make_api_request("GET", f"{ig_user_id}/media", params=params)
         
         return {
             "data": result.get("data", []),
@@ -1358,12 +1193,10 @@ def INSTAGRAM_GET_IG_USER_STORIES(
     limit: Annotated[Optional[int], "Number of stories to retrieve"] = None,
     after: Annotated[Optional[str], "Paging cursor: after"] = None,
     before: Annotated[Optional[str], "Paging cursor: before"] = None,
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
-    ig_user_id: Annotated[Optional[str], "Instagram user ID (optional, auto-detected from access token)"] = None,
 ):
     """Get active story media objects for an Instagram Business or Creator account."""
     try:
-        ig_user_id = _get_instagram_user_id(ig_user_id)
+        ig_user_id = _get_instagram_user_id(None)
         
         params = {
             "fields": fields or "id,media_type,media_url,permalink,timestamp"
@@ -1376,18 +1209,7 @@ def INSTAGRAM_GET_IG_USER_STORIES(
         if before:
             params["before"] = before
         
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("GET", f"{ig_user_id}/stories", params=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("GET", f"{ig_user_id}/stories", params=params)
+        result = make_api_request("GET", f"{ig_user_id}/stories", params=params)
         
         return {
             "data": result.get("data", []),
@@ -1413,12 +1235,10 @@ def INSTAGRAM_GET_IG_USER_TAGS(
     limit: Annotated[Optional[int], "Number of tagged media items to retrieve"] = 25,
     after: Annotated[Optional[str], "Paging cursor: after"] = None,
     before: Annotated[Optional[str], "Paging cursor: before"] = None,
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
-    ig_user_id: Annotated[Optional[str], "Instagram user ID (optional, auto-detected from access token)"] = None,
 ):
     """Get Instagram media where the user has been tagged by other users."""
     try:
-        ig_user_id = _get_instagram_user_id(ig_user_id)
+        ig_user_id = _get_instagram_user_id(None)
         
         params = {
             "fields": fields or "id,caption,media_type,media_url,permalink,timestamp,username"
@@ -1431,18 +1251,7 @@ def INSTAGRAM_GET_IG_USER_TAGS(
         if before:
             params["before"] = before
         
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("GET", f"{ig_user_id}/tags", params=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("GET", f"{ig_user_id}/tags", params=params)
+        result = make_api_request("GET", f"{ig_user_id}/tags", params=params)
         
         return {
             "data": result.get("data", []),
@@ -1465,29 +1274,16 @@ def INSTAGRAM_GET_IG_USER_TAGS(
 )
 def INSTAGRAM_GET_IG_USER_CONTENT_PUBLISHING_LIMIT(
     fields: Annotated[Optional[str], "Fields to return"] = "quota_usage,config",
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
-    ig_user_id: Annotated[Optional[str], "Instagram user ID (optional, auto-detected from access token)"] = None,
 ):
     """Get an Instagram Business Account's current content publishing usage."""
     try:
-        ig_user_id = _get_instagram_user_id(ig_user_id)
+        ig_user_id = _get_instagram_user_id(None)
         
         params = {
             "fields": fields or "quota_usage,config"
         }
         
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("GET", f"{ig_user_id}/content_publishing_limit", params=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("GET", f"{ig_user_id}/content_publishing_limit", params=params)
+        result = make_api_request("GET", f"{ig_user_id}/content_publishing_limit", params=params)
         
         return {
             "data": result.get("data", []),
@@ -1508,29 +1304,16 @@ def INSTAGRAM_GET_IG_USER_CONTENT_PUBLISHING_LIMIT(
 )
 def INSTAGRAM_GET_IG_USER_LIVE_MEDIA(
     fields: Annotated[Optional[str], "Fields to return"] = "id,media_type,media_url,timestamp,permalink",
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
-    ig_user_id: Annotated[Optional[str], "Instagram user ID (optional, auto-detected from access token)"] = None,
 ):
     """Get live media objects during an active Instagram broadcast."""
     try:
-        ig_user_id = _get_instagram_user_id(ig_user_id)
+        ig_user_id = _get_instagram_user_id(None)
         
         params = {
             "fields": fields or "id,media_type,media_url,timestamp,permalink"
         }
         
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("GET", f"{ig_user_id}/live_media", params=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("GET", f"{ig_user_id}/live_media", params=params)
+        result = make_api_request("GET", f"{ig_user_id}/live_media", params=params)
         
         # Check if there's no live broadcast (empty data array)
         live_media_data = result.get("data", [])
@@ -1565,7 +1348,6 @@ def INSTAGRAM_GET_IG_MEDIA_COMMENTS(
     limit: Annotated[Optional[int], "Max comments to return"] = 25,
     after: Annotated[Optional[str], "Paging cursor: after"] = None,
     before: Annotated[Optional[str], "Paging cursor: before"] = None,
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
 ):
     """Retrieve comments on an Instagram media object."""
     try:
@@ -1581,18 +1363,7 @@ def INSTAGRAM_GET_IG_MEDIA_COMMENTS(
         if before:
             params["before"] = before
         
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("GET", f"{ig_media_id}/comments", params=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("GET", f"{ig_media_id}/comments", params=params)
+        result = make_api_request("GET", f"{ig_media_id}/comments", params=params)
         
         return {
             "data": result.get("data", []),
@@ -1617,7 +1388,6 @@ def INSTAGRAM_GET_POST_COMMENTS(
     ig_post_id: Annotated[str, "Instagram post ID (required)"],
     limit: Annotated[Optional[int], "Number of comments to retrieve"] = 25,
     after: Annotated[Optional[str], "Paging cursor: after"] = None,
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
 ):
     """Get comments on an Instagram post."""
     try:
@@ -1629,18 +1399,7 @@ def INSTAGRAM_GET_POST_COMMENTS(
         if after:
             params["after"] = after
         
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("GET", f"{ig_post_id}/comments", params=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("GET", f"{ig_post_id}/comments", params=params)
+        result = make_api_request("GET", f"{ig_post_id}/comments", params=params)
         
         return {
             "data": result.get("data", []),
@@ -1665,7 +1424,6 @@ def INSTAGRAM_GET_POST_INSIGHTS(
     ig_post_id: Annotated[str, "Instagram post ID (required)"],
     metric_preset: Annotated[Optional[str], "Metric preset to use"] = "auto_safe",
     metric: Annotated[Optional[List[str]], "Specific metrics to retrieve (optional, overrides metric_preset if provided)"] = None,
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
 ):
     """Get Instagram post insights/analytics."""
     try:
@@ -1679,18 +1437,7 @@ def INSTAGRAM_GET_POST_INSIGHTS(
         else:
             params["metric_preset"] = metric_preset or "auto_safe"
         
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("GET", f"{ig_post_id}/insights", params=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("GET", f"{ig_post_id}/insights", params=params)
+        result = make_api_request("GET", f"{ig_post_id}/insights", params=params)
         
         return {
             "data": result.get("data", []),
@@ -1722,7 +1469,6 @@ def INSTAGRAM_GET_POST_INSIGHTS(
 def INSTAGRAM_GET_IG_MEDIA(
     ig_media_id: Annotated[str, "Instagram media ID (required)"],
     fields: Annotated[Optional[str], "Fields to return"] = None,
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
 ):
     """Get a published Instagram media object."""
     try:
@@ -1732,18 +1478,7 @@ def INSTAGRAM_GET_IG_MEDIA(
             "fields": fields or "id"
         }
 
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("GET", ig_media_id, params=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("GET", ig_media_id, params=params)
+        result = make_api_request("GET", ig_media_id, params=params)
 
         return {
             "data": result,
@@ -1764,7 +1499,6 @@ def INSTAGRAM_GET_IG_MEDIA(
 def INSTAGRAM_GET_IG_MEDIA_CHILDREN(
     ig_media_id: Annotated[str, "Instagram media ID (required)"],
     fields: Annotated[Optional[str], "Fields to return"] = None,
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
 ):
     """Get children of a carousel/album post."""
     try:
@@ -1776,18 +1510,7 @@ def INSTAGRAM_GET_IG_MEDIA_CHILDREN(
 
         endpoint = f"{ig_media_id}/children"
 
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("GET", endpoint, params=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("GET", endpoint, params=params)
+        result = make_api_request("GET", endpoint, params=params)
 
         return {
             "data": result.get("data", []),
@@ -1808,7 +1531,6 @@ def INSTAGRAM_GET_IG_MEDIA_CHILDREN(
 def INSTAGRAM_POST_IG_MEDIA_COMMENTS(
     ig_media_id: Annotated[str, "Instagram media ID (required)"],
     message: Annotated[str, "Comment message (required, max 300 chars, max 4 hashtags, max 1 URL)"],
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
 ):
     """Create a comment on an Instagram media object."""
     try:
@@ -1818,18 +1540,7 @@ def INSTAGRAM_POST_IG_MEDIA_COMMENTS(
             "message": message
         }
         
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("POST", f"{ig_media_id}/comments", data=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("POST", f"{ig_media_id}/comments", data=params)
+        result = make_api_request("POST", f"{ig_media_id}/comments", data=params)
         
         return {
             "data": result,
@@ -1851,7 +1562,6 @@ def INSTAGRAM_POST_IG_MEDIA_COMMENTS(
 def INSTAGRAM_POST_IG_COMMENT_REPLIES(
     ig_comment_id: Annotated[str, "Instagram comment ID to reply to (required)"],
     message: Annotated[str, "Reply message (required, max 300 chars, max 4 hashtags, max 1 URL)"],
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
 ):
     """Create a reply to an Instagram comment."""
     try:
@@ -1861,18 +1571,7 @@ def INSTAGRAM_POST_IG_COMMENT_REPLIES(
             "message": message
         }
         
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("POST", f"{ig_comment_id}/replies", data=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("POST", f"{ig_comment_id}/replies", data=params)
+        result = make_api_request("POST", f"{ig_comment_id}/replies", data=params)
         
         return {
             "data": result,
@@ -1895,13 +1594,11 @@ def INSTAGRAM_POST_IG_USER_MENTIONS(
     media_id: Annotated[str, "Media ID where the mention is located (required)"],
     message: Annotated[str, "Reply message (required, max 300 chars, max 4 hashtags, max 1 URL)"],
     comment_id: Annotated[Optional[str], "Comment ID if replying to a comment mention (optional)"] = None,
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
-    ig_user_id: Annotated[Optional[str], "Instagram user ID (optional, auto-detected from access token)"] = None,
 ):
     """Reply to a mention of your Instagram Business or Creator account."""
     try:
         _validate_required({"media_id": media_id, "message": message}, ["media_id", "message"])
-        ig_user_id = _get_instagram_user_id(ig_user_id)
+        ig_user_id = _get_instagram_user_id(None)
         
         params = {
             "message": message
@@ -1913,18 +1610,7 @@ def INSTAGRAM_POST_IG_USER_MENTIONS(
         else:
             endpoint = f"{media_id}/comments"
         
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("POST", endpoint, data=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("POST", endpoint, data=params)
+        result = make_api_request("POST", endpoint, data=params)
         
         return {
             "data": result,
@@ -1946,7 +1632,6 @@ def INSTAGRAM_POST_IG_USER_MENTIONS(
 def INSTAGRAM_REPLY_TO_COMMENT(
     ig_comment_id: Annotated[str, "Instagram comment ID to reply to (required)"],
     message: Annotated[str, "Reply message (required)"],
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
 ):
     """Reply to a comment on Instagram media."""
     try:
@@ -1956,18 +1641,7 @@ def INSTAGRAM_REPLY_TO_COMMENT(
             "message": message
         }
         
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("POST", f"{ig_comment_id}/replies", data=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("POST", f"{ig_comment_id}/replies", data=params)
+        result = make_api_request("POST", f"{ig_comment_id}/replies", data=params)
         
         return {
             "data": result,
@@ -1992,7 +1666,6 @@ def INSTAGRAM_GET_IG_COMMENT_REPLIES(
     limit: Annotated[Optional[int], "Max replies to return"] = 25,
     after: Annotated[Optional[str], "Paging cursor: after"] = None,
     before: Annotated[Optional[str], "Paging cursor: before"] = None,
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
 ):
     """Get replies to a specific Instagram comment."""
     try:
@@ -2010,18 +1683,7 @@ def INSTAGRAM_GET_IG_COMMENT_REPLIES(
 
         endpoint = f"{ig_comment_id}/replies"
 
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("GET", endpoint, params=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("GET", endpoint, params=params)
+        result = make_api_request("GET", endpoint, params=params)
 
         return {
             "data": result.get("data", []),
@@ -2043,24 +1705,12 @@ def INSTAGRAM_GET_IG_COMMENT_REPLIES(
 )
 def INSTAGRAM_DELETE_COMMENT(
     ig_comment_id: Annotated[str, "Instagram comment ID to delete (required)"],
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
 ):
     """Delete a comment on Instagram media."""
     try:
         _validate_required({"ig_comment_id": ig_comment_id}, ["ig_comment_id"])
         
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("DELETE", ig_comment_id)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("DELETE", ig_comment_id)
+        result = make_api_request("DELETE", ig_comment_id)
         
         return {
             "data": result if result else {"success": True},
@@ -2083,14 +1733,13 @@ def INSTAGRAM_GET_IG_MEDIA_INSIGHTS(
     ig_media_id: Annotated[str, "Instagram media ID (required)"],
     metric: Annotated[List[str], "Metrics to retrieve (required). For v22.0+: reach, likes, comments, shares, saved, video_views, plays, total_interactions, views, replies. Note: 'impressions' is NOT supported in v22.0+ - use 'reach' instead."],
     period: Annotated[Optional[str], "Aggregation period (default: lifetime)"] = "lifetime",
-    graph_api_version: Annotated[Optional[str], "Graph API version (optional, defaults to INSTAGRAM_GRAPH_API_VERSION env var or v21.0)"] = None,
 ):
     """Get insights for an Instagram media object."""
     try:
         _validate_required({"ig_media_id": ig_media_id, "metric": metric}, ["ig_media_id", "metric"])
         
         # Get the API version being used
-        api_version = graph_api_version or get_graph_api_version()
+        api_version = get_graph_api_version()
         # Check if version is v22.0 or higher
         try:
             version_num = int(api_version.replace("v", "").split(".")[0])
@@ -2109,18 +1758,7 @@ def INSTAGRAM_GET_IG_MEDIA_INSIGHTS(
             "period": period or "lifetime",
         }
 
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("GET", f"{ig_media_id}/insights", params=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("GET", f"{ig_media_id}/insights", params=params)
+        result = make_api_request("GET", f"{ig_media_id}/insights", params=params)
 
         return {
             "data": result.get("data", []),
@@ -2152,7 +1790,6 @@ def INSTAGRAM_GET_IG_MEDIA_INSIGHTS(
 )
 def INSTAGRAM_GET_CONVERSATION(
     conversation_id: Annotated[str, "Conversation ID (required)"],
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
 ):
     """Get details about a specific Instagram DM conversation."""
     try:
@@ -2183,10 +1820,6 @@ def INSTAGRAM_GET_CONVERSATION(
         original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
         
         try:
-            # Set graph API version if provided
-            if graph_api_version:
-                os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            
             # CRITICAL: Set page access token to INSTAGRAM_ACCESS_TOKEN so get_access_token() uses it
             os.environ["INSTAGRAM_ACCESS_TOKEN"] = page_access_token
             os.environ["INSTAGRAM_OAUTH_ACCESS_TOKEN"] = page_access_token
@@ -2209,7 +1842,7 @@ def INSTAGRAM_GET_CONVERSATION(
             # Restore graph API version
             if original_version:
                 os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-            elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ and not graph_api_version:
+            elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
                 del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
         
         return {
@@ -2232,7 +1865,6 @@ def INSTAGRAM_GET_CONVERSATION(
 def INSTAGRAM_GET_CONVERSATIONS(
     page_id: Annotated[Optional[str], "Facebook Page ID (optional, auto-detected if not provided)"] = None,
     limit: Annotated[Optional[int], "Number of conversations to retrieve (optional)"] = None,
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
 ):
     """List Instagram DM conversations to find conversation IDs."""
     try:
@@ -2271,10 +1903,6 @@ def INSTAGRAM_GET_CONVERSATIONS(
         original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
         
         try:
-            # Set graph API version if provided
-            if graph_api_version:
-                os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            
             # CRITICAL: Set page access token to INSTAGRAM_ACCESS_TOKEN so get_access_token() uses it
             os.environ["INSTAGRAM_ACCESS_TOKEN"] = page_access_token
             os.environ["INSTAGRAM_OAUTH_ACCESS_TOKEN"] = page_access_token
@@ -2297,7 +1925,7 @@ def INSTAGRAM_GET_CONVERSATIONS(
             # Restore graph API version
             if original_version:
                 os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-            elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ and not graph_api_version:
+            elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
                 del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
 
         return {
@@ -2319,12 +1947,10 @@ def INSTAGRAM_GET_CONVERSATIONS(
 def INSTAGRAM_LIST_ALL_CONVERSATIONS(
     limit: Annotated[Optional[int], "Number of conversations to retrieve"] = 25,
     after: Annotated[Optional[str], "Paging cursor: after"] = None,
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
-    ig_user_id: Annotated[Optional[str], "Instagram user ID (optional, auto-detected from access token)"] = None,
 ):
     """List all Instagram DM conversations for the authenticated user."""
     try:
-        ig_user_id = _get_instagram_user_id(ig_user_id)
+        ig_user_id = _get_instagram_user_id(None)
         
         page_info = _get_page_for_ig_account(ig_user_id)
         page_id = page_info.get("page_id")
@@ -2358,10 +1984,6 @@ def INSTAGRAM_LIST_ALL_CONVERSATIONS(
         original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
         
         try:
-            # Set graph API version if provided
-            if graph_api_version:
-                os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            
             # Use page access token (we already verified it exists above)
             # Instagram Conversations API requires a Page Access Token, not a User Access Token
             if page_access_token:
@@ -2402,7 +2024,7 @@ def INSTAGRAM_LIST_ALL_CONVERSATIONS(
             # Restore graph API version
             if original_version:
                 os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-            elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ and not graph_api_version:
+            elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
                 del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
         
         # Check if result has data
@@ -2448,7 +2070,6 @@ def INSTAGRAM_LIST_ALL_MESSAGES(
     conversation_id: Annotated[str, "Conversation ID (required)"],
     limit: Annotated[Optional[int], "Number of messages to retrieve"] = 25,
     after: Annotated[Optional[str], "Paging cursor: after"] = None,
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
 ):
     """List all messages from a specific Instagram DM conversation."""
     try:
@@ -2469,37 +2090,18 @@ def INSTAGRAM_LIST_ALL_MESSAGES(
         
         endpoint = f"{conversation_id}/messages"
         
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                if page_info.get("page_access_token"):
-                    original_token = os.environ.get("INSTAGRAM_ACCESS_TOKEN")
-                    os.environ["INSTAGRAM_ACCESS_TOKEN"] = page_info["page_access_token"]
-                else:
-                    original_token = None
-                try:
-                    result = make_api_request("GET", endpoint, params=params)
-                finally:
-                    if original_token:
-                        os.environ["INSTAGRAM_ACCESS_TOKEN"] = original_token
-                    elif page_info.get("page_access_token") and "INSTAGRAM_ACCESS_TOKEN" in os.environ:
-                        del os.environ["INSTAGRAM_ACCESS_TOKEN"]
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
+        if page_info.get("page_access_token"):
+            original_token = os.environ.get("INSTAGRAM_ACCESS_TOKEN")
+            os.environ["INSTAGRAM_ACCESS_TOKEN"] = page_info["page_access_token"]
         else:
-            if page_info.get("page_access_token"):
-                original_token = os.environ.get("INSTAGRAM_ACCESS_TOKEN")
-                os.environ["INSTAGRAM_ACCESS_TOKEN"] = page_info["page_access_token"]
-                try:
-                    result = make_api_request("GET", endpoint, params=params)
-                finally:
-                    os.environ["INSTAGRAM_ACCESS_TOKEN"] = original_token
-            else:
-                result = make_api_request("GET", endpoint, params=params)
+            original_token = None
+        try:
+            result = make_api_request("GET", endpoint, params=params)
+        finally:
+            if original_token:
+                os.environ["INSTAGRAM_ACCESS_TOKEN"] = original_token
+            elif page_info.get("page_access_token") and "INSTAGRAM_ACCESS_TOKEN" in os.environ:
+                del os.environ["INSTAGRAM_ACCESS_TOKEN"]
         
         return {
             "data": result.get("data", []),
@@ -2523,16 +2125,13 @@ def INSTAGRAM_LIST_ALL_MESSAGES(
 def INSTAGRAM_SEND_TEXT_MESSAGE(
     recipient_id: Annotated[str, "Recipient Instagram user ID (required)"],
     text: Annotated[str, "Text message to send (required)"],
-    ig_user_id: Annotated[Optional[str], "Instagram user ID"] = None,
     reply_to_message_id: Annotated[Optional[str], "Message ID to reply to"] = None,
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
 ):
     """Send a text message to an Instagram user via DM."""
     try:
         _validate_required({"recipient_id": recipient_id, "text": text}, ["recipient_id", "text"])
         
-        if not ig_user_id:
-            ig_user_id = _get_instagram_user_id(None)
+        ig_user_id = _get_instagram_user_id(None)
         
         # Get page access token for messaging (required)
         page_info = _get_page_for_ig_account(ig_user_id)
@@ -2560,18 +2159,7 @@ def INSTAGRAM_SEND_TEXT_MESSAGE(
                 os.environ["INSTAGRAM_OAUTH_ACCESS_TOKEN"] = page_info["page_access_token"]
             
             try:
-                if graph_api_version:
-                    original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-                    try:
-                        result = make_api_request("POST", endpoint, data=params)
-                    finally:
-                        if original_version:
-                            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                        elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                            del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-                else:
-                    result = make_api_request("POST", endpoint, data=params)
+                result = make_api_request("POST", endpoint, data=params)
             finally:
                 # Restore original token
                 if original_token:
@@ -2583,18 +2171,7 @@ def INSTAGRAM_SEND_TEXT_MESSAGE(
                         del os.environ["INSTAGRAM_OAUTH_ACCESS_TOKEN"]
         else:
             # No page access token available, try with regular token
-            if graph_api_version:
-                original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-                os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-                try:
-                    result = make_api_request("POST", endpoint, data=params)
-                finally:
-                    if original_version:
-                        os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                    elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                        del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-            else:
-                result = make_api_request("POST", endpoint, data=params)
+            result = make_api_request("POST", endpoint, data=params)
         
         return {
             "data": result,
@@ -2630,15 +2207,12 @@ def INSTAGRAM_SEND_TEXT_MESSAGE(
 )
 def INSTAGRAM_GET_USER_BY_USERNAME(
     username: Annotated[str, "Instagram username (without @ symbol, required)"],
-    ig_user_id: Annotated[Optional[str], "Your Instagram user ID (optional, uses env var if not provided)"] = None,
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
 ):
     """Find an Instagram user's ID by their username using Business Discovery API."""
     try:
         _validate_required({"username": username}, ["username"])
         
-        if not ig_user_id:
-            ig_user_id = _get_instagram_user_id(None)
+        ig_user_id = _get_instagram_user_id(None)
         
         # Remove @ if user included it
         username = username.lstrip('@')
@@ -2647,18 +2221,7 @@ def INSTAGRAM_GET_USER_BY_USERNAME(
             "fields": f"business_discovery.username({username}){{id,username,name,profile_picture_url,biography,followers_count,follows_count,media_count}}"
         }
         
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("GET", ig_user_id, params=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("GET", ig_user_id, params=params)
+        result = make_api_request("GET", ig_user_id, params=params)
         
         # Extract the user info from business_discovery
         if "business_discovery" in result:
@@ -2698,15 +2261,12 @@ def INSTAGRAM_GET_USER_BY_USERNAME(
 def INSTAGRAM_SEND_IMAGE(
     recipient_id: Annotated[str, "Recipient Instagram user ID (required)"],
     image_url: Annotated[str, "Image URL to send (required)"],
-    ig_user_id: Annotated[Optional[str], "Instagram user ID"] = None,
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
 ):
     """Send an image via Instagram DM to a specific user."""
     try:
         _validate_required({"recipient_id": recipient_id, "image_url": image_url}, ["recipient_id", "image_url"])
         
-        if not ig_user_id:
-            ig_user_id = _get_instagram_user_id(None)
+        ig_user_id = _get_instagram_user_id(None)
         
         params = {
             "recipient": json.dumps({"id": recipient_id}),
@@ -2715,18 +2275,7 @@ def INSTAGRAM_SEND_IMAGE(
         
         endpoint = f"{ig_user_id}/messages"
         
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("POST", endpoint, data=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("POST", endpoint, data=params)
+        result = make_api_request("POST", endpoint, data=params)
         
         return {
             "data": result,
@@ -2747,15 +2296,12 @@ def INSTAGRAM_SEND_IMAGE(
 )
 def INSTAGRAM_MARK_SEEN(
     recipient_id: Annotated[str, "Recipient Instagram user ID (required)"],
-    ig_user_id: Annotated[Optional[str], "Instagram user ID"] = None,
-    graph_api_version: Annotated[Optional[str], "Graph API version"] = None,
 ):
     """Mark Instagram DM messages as read/seen for a specific user."""
     try:
         _validate_required({"recipient_id": recipient_id}, ["recipient_id"])
         
-        if not ig_user_id:
-            ig_user_id = _get_instagram_user_id(None)
+        ig_user_id = _get_instagram_user_id(None)
         
         params = {
             "recipient": json.dumps({"id": recipient_id}),
@@ -2764,18 +2310,7 @@ def INSTAGRAM_MARK_SEEN(
         
         endpoint = f"{ig_user_id}/messages"
         
-        if graph_api_version:
-            original_version = os.environ.get("INSTAGRAM_GRAPH_API_VERSION")
-            os.environ["INSTAGRAM_GRAPH_API_VERSION"] = graph_api_version
-            try:
-                result = make_api_request("POST", endpoint, data=params)
-            finally:
-                if original_version:
-                    os.environ["INSTAGRAM_GRAPH_API_VERSION"] = original_version
-                elif "INSTAGRAM_GRAPH_API_VERSION" in os.environ:
-                    del os.environ["INSTAGRAM_GRAPH_API_VERSION"]
-        else:
-            result = make_api_request("POST", endpoint, data=params)
+        result = make_api_request("POST", endpoint, data=params)
         
         return {
             "data": result,
