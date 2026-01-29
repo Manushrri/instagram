@@ -141,7 +141,7 @@ def _save_tokens(tokens: Dict[str, Any]) -> None:
         print(f"Warning: Failed to save tokens to {token_file}: {e}")
 
 def _is_token_expired() -> bool:
-    """Check if the stored access token is expired or will expire soon (within 5 minutes)."""
+    """Check if the stored access token is expired or will expire soon (within 1 day)."""
     tokens = _load_tokens()
     if "access_token_saved_at" not in tokens or "expires_in" not in tokens:
         return False  # Can't determine, assume valid
@@ -150,9 +150,10 @@ def _is_token_expired() -> bool:
     expires_in = tokens["expires_in"]
     current_time = time.time()
     
-    # Check if token expires within 5 minutes (300 seconds)
+    # Check if token expires within 1 day (86400 seconds = 24 hours)
+    # This ensures the token is refreshed 1 day before it actually expires
     time_until_expiry = (saved_at + expires_in) - current_time
-    return time_until_expiry < 300
+    return time_until_expiry < 86400
 
 # -------------------- OAUTH2 FUNCTIONS --------------------
 

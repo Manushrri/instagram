@@ -60,7 +60,7 @@ class InstagramClient:
         logger.info("Tokens saved to storage")
     
     def _is_token_expired(self) -> bool:
-        """Check if the stored access token is expired."""
+        """Check if the stored access token is expired or will expire within 1 day."""
         stored_tokens = self._load_tokens()
         expires_in = stored_tokens.get("expires_in")
         saved_at = stored_tokens.get("access_token_saved_at")
@@ -70,7 +70,8 @@ class InstagramClient:
         
         current_time = time.time()
         expiry_time = saved_at + expires_in
-        buffer = 300  # 5 minutes buffer
+        # Refresh token 1 day (86400 seconds) before it actually expires
+        buffer = 86400  # 24 hours buffer
         
         return current_time >= (expiry_time - buffer)
     
