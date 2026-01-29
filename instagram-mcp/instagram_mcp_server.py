@@ -585,7 +585,7 @@ def _get_page_for_ig_account(ig_user_id: str) -> Dict[str, Optional[str]]:
 
 @mcp.tool(
     "CREATE_MEDIA_CONTAINER",
-    description="Create Media Container. Create a draft media container for photos/videos/reels before publishing. PARAMETERS: image_url OR video_url (one required) - Public URL of media. caption (optional) - Post caption. media_type (optional) - 'IMAGE' or 'VIDEO'. cover_url (optional) - Cover image for videos. is_carousel_item (optional) - True if part of carousel. RETURNS: 'id' field (creation_id) - USE THIS IN: GET_POST_STATUS (to check processing), CREATE_POST or POST_IG_USER_MEDIA_PUBLISH (to publish). WORKFLOW: 1) Call this → 2) Get 'id' → 3) Call GET_POST_STATUS until 'FINISHED' → 4) Call CREATE_POST with creation_id.",
+    description="Create Media Container. Create a draft media container for photos/videos/reels before publishing. PARAMETERS: image_url OR video_url (one required) - Public URL of media. caption (optional) - Post caption. media_type (optional) - 'IMAGE' or 'VIDEO'. cover_url (optional) - Cover image for videos. is_carousel_item (optional) - True if part of carousel. RETURNS: 'id' field (creation_id) - USE THIS IN: GET_POST_STATUS (to check processing), CREATE_POST or POST_IG_USER_MEDIA_PUBLISH (to publish). WORKFLOW: 1) Call this -> 2) Get 'id' -> 3) Call GET_POST_STATUS until 'FINISHED' -> 4) Call CREATE_POST with creation_id.",
 )
 def INSTAGRAM_CREATE_MEDIA_CONTAINER(
     image_url: Annotated[Optional[str], "Image URL for photo post"] = None,
@@ -858,7 +858,7 @@ def INSTAGRAM_CREATE_CAROUSEL_CONTAINER(
 
 @mcp.tool(
     "GET_POST_STATUS",
-    description="Get Post Status. Check the processing status of a draft post container. PARAMETER: creation_id (required) - Get from CREATE_MEDIA_CONTAINER response → 'id' field. RETURNS: 'status_code' with values: 'IN_PROGRESS' (still processing, wait and check again), 'FINISHED' (ready to publish - call CREATE_POST or POST_IG_USER_MEDIA_PUBLISH), 'ERROR' (processing failed, check error_message). WORKFLOW: Call repeatedly until status is 'FINISHED', then publish.",
+    description="Get Post Status. Check the processing status of a draft post container. PARAMETER: creation_id (required) - Get from CREATE_MEDIA_CONTAINER response -> 'id' field. RETURNS: 'status_code' with values: 'IN_PROGRESS' (still processing, wait and check again), 'FINISHED' (ready to publish - call CREATE_POST or POST_IG_USER_MEDIA_PUBLISH), 'ERROR' (processing failed, check error_message). WORKFLOW: Call repeatedly until status is 'FINISHED', then publish.",
 )
 def INSTAGRAM_GET_POST_STATUS(
     creation_id: Annotated[str, "Creation ID from media container (required)"],
@@ -909,7 +909,7 @@ def INSTAGRAM_GET_POST_STATUS(
 
 @mcp.tool(
     "CREATE_POST",
-    description="Create Post. Publish a draft media container to Instagram (final publishing step). PARAMETER: creation_id (required) - Get from CREATE_MEDIA_CONTAINER response → 'id' field. RETURNS: 'id' (ig_media_id of published post) - USE THIS IN: GET_IG_MEDIA_INSIGHTS (for metrics), GET_IG_MEDIA_COMMENTS (for comments), POST_IG_COMMENT_REPLIES (to reply to comments). Auto-retries up to ~45s if media still processing (error 9007). For large videos, use GET_POST_STATUS first to confirm 'FINISHED' status. WORKFLOW: CREATE_MEDIA_CONTAINER → GET_POST_STATUS → CREATE_POST.",
+    description="Create Post. Publish a draft media container to Instagram (final publishing step). PARAMETER: creation_id (required) - Get from CREATE_MEDIA_CONTAINER response -> 'id' field. RETURNS: 'id' (ig_media_id of published post) - USE THIS IN: GET_IG_MEDIA_INSIGHTS (for metrics), GET_IG_MEDIA_COMMENTS (for comments), POST_IG_COMMENT_REPLIES (to reply to comments). Auto-retries up to ~45s if media still processing (error 9007). For large videos, use GET_POST_STATUS first to confirm 'FINISHED' status. WORKFLOW: CREATE_MEDIA_CONTAINER -> GET_POST_STATUS -> CREATE_POST.",
 )
 def INSTAGRAM_CREATE_POST(
     creation_id: Annotated[str, "Creation_id from media container (required)"],
@@ -988,7 +988,7 @@ def INSTAGRAM_CREATE_POST(
 
 @mcp.tool(
     "POST_IG_USER_MEDIA_PUBLISH",
-    description="Publish IG User Media. Publish a media container to Instagram with automatic polling. PARAMETER: creation_id (required) - Get from CREATE_MEDIA_CONTAINER response → 'id' field. max_wait_seconds (optional, default 45) - How long to wait for processing. RETURNS: 'id' (ig_media_id of published post) - USE THIS IN: GET_IG_MEDIA_INSIGHTS, GET_IG_MEDIA_COMMENTS, POST_IG_COMMENT_REPLIES. Auto-polls status until FINISHED, then publishes. Rate limit: 25 posts per 24 hours. For videos >45s processing time, manually use GET_POST_STATUS first.",
+    description="Publish IG User Media. Publish a media container to Instagram with automatic polling. PARAMETER: creation_id (required) - Get from CREATE_MEDIA_CONTAINER response -> 'id' field. max_wait_seconds (optional, default 45) - How long to wait for processing. RETURNS: 'id' (ig_media_id of published post) - USE THIS IN: GET_IG_MEDIA_INSIGHTS, GET_IG_MEDIA_COMMENTS, POST_IG_COMMENT_REPLIES. Auto-polls status until FINISHED, then publishes. Rate limit: 25 posts per 24 hours. For videos >45s processing time, manually use GET_POST_STATUS first.",
 )
 def INSTAGRAM_POST_IG_USER_MEDIA_PUBLISH(
     creation_id: Annotated[str, "Creation ID from media container (required)"],
@@ -1557,7 +1557,7 @@ def INSTAGRAM_GET_IG_USER_LIVE_MEDIA(
 
 @mcp.tool(
     "GET_IG_MEDIA_COMMENTS",
-    description="Get IG Media Comments. Retrieve comments on an Instagram media object. PARAMETER: ig_media_id (required) - Get from: 1) GET_USER_MEDIA response → 'id' field, OR 2) CREATE_POST/POST_IG_USER_MEDIA_PUBLISH response → 'id' field. RETURNS: Array of comment objects containing: 'id' (comment_id) - use in POST_IG_COMMENT_REPLIES, REPLY_TO_COMMENT, DELETE_COMMENT; 'text' - comment content; 'username' - commenter; 'timestamp'. PAGINATION: Use 'after' cursor for more comments.",
+    description="Get IG Media Comments. Retrieve comments on an Instagram media object. PARAMETER: ig_media_id (required) - Get from: 1) GET_USER_MEDIA response -> 'id' field, OR 2) CREATE_POST/POST_IG_USER_MEDIA_PUBLISH response -> 'id' field. RETURNS: Array of comment objects containing: 'id' (comment_id) - use in POST_IG_COMMENT_REPLIES, REPLY_TO_COMMENT, DELETE_COMMENT; 'text' - comment content; 'username' - commenter; 'timestamp'. PAGINATION: Use 'after' cursor for more comments.",
 )
 def INSTAGRAM_GET_IG_MEDIA_COMMENTS(
     ig_media_id: Annotated[str, "Instagram media ID (required)"],
@@ -1611,7 +1611,7 @@ def INSTAGRAM_GET_IG_MEDIA_COMMENTS(
 
 @mcp.tool(
     "GET_POST_COMMENTS",
-    description="Get Post Comments. Get comments on an Instagram post. PARAMETER: ig_post_id (required) - Get from: 1) GET_USER_MEDIA response → 'id' field, OR 2) CREATE_POST/POST_IG_USER_MEDIA_PUBLISH response → 'id' field. RETURNS: Array of comment objects containing: 'id' (comment_id) - use in POST_IG_COMMENT_REPLIES, REPLY_TO_COMMENT, DELETE_COMMENT; 'text'; 'username'; 'timestamp'. Same as GET_IG_MEDIA_COMMENTS but with different field naming.",
+    description="Get Post Comments. Get comments on an Instagram post. PARAMETER: ig_post_id (required) - Get from: 1) GET_USER_MEDIA response -> 'id' field, OR 2) CREATE_POST/POST_IG_USER_MEDIA_PUBLISH response -> 'id' field. RETURNS: Array of comment objects containing: 'id' (comment_id) - use in POST_IG_COMMENT_REPLIES, REPLY_TO_COMMENT, DELETE_COMMENT; 'text'; 'username'; 'timestamp'. Same as GET_IG_MEDIA_COMMENTS but with different field naming.",
 )
 def INSTAGRAM_GET_POST_COMMENTS(
     ig_post_id: Annotated[str, "Instagram post ID (required)"],
@@ -1846,7 +1846,7 @@ def INSTAGRAM_POST_IG_MEDIA_COMMENTS(
 
 @mcp.tool(
     "POST_IG_COMMENT_REPLIES",
-    description="Post IG Comment Replies. Reply to an Instagram comment. PARAMETERS: ig_comment_id (required) - Get from GET_IG_MEDIA_COMMENTS or GET_POST_COMMENTS response → 'id' field of the comment to reply to. message (required) - Your reply text. CONSTRAINTS: Max 300 chars, max 4 hashtags, max 1 URL, cannot be all caps. RETURNS: 'id' of the new reply comment. WORKFLOW: GET_USER_MEDIA → GET_IG_MEDIA_COMMENTS → POST_IG_COMMENT_REPLIES with comment's 'id'.",
+    description="Post IG Comment Replies. Reply to an Instagram comment. PARAMETERS: ig_comment_id (required) - Get from GET_IG_MEDIA_COMMENTS or GET_POST_COMMENTS response -> 'id' field of the comment to reply to. message (required) - Your reply text. CONSTRAINTS: Max 300 chars, max 4 hashtags, max 1 URL, cannot be all caps. RETURNS: 'id' of the new reply comment. WORKFLOW: GET_USER_MEDIA -> GET_IG_MEDIA_COMMENTS -> POST_IG_COMMENT_REPLIES with comment's 'id'.",
 )
 def INSTAGRAM_POST_IG_COMMENT_REPLIES(
     ig_comment_id: Annotated[str, "Instagram comment ID to reply to (required)"],
@@ -1941,7 +1941,7 @@ def INSTAGRAM_POST_IG_USER_MENTIONS(
 
 @mcp.tool(
     "REPLY_TO_COMMENT",
-    description="Reply To Comment. Reply to a comment on Instagram media. PARAMETERS: ig_comment_id (required) - Get from GET_IG_MEDIA_COMMENTS or GET_POST_COMMENTS response → 'id' field of the comment to reply to. message (required) - Your reply text. RETURNS: 'id' of the new reply. Similar to POST_IG_COMMENT_REPLIES. WORKFLOW: GET_USER_MEDIA → GET_IG_MEDIA_COMMENTS/GET_POST_COMMENTS → REPLY_TO_COMMENT with comment's 'id'.",
+    description="Reply To Comment. Reply to a comment on Instagram media. PARAMETERS: ig_comment_id (required) - Get from GET_IG_MEDIA_COMMENTS or GET_POST_COMMENTS response -> 'id' field of the comment to reply to. message (required) - Your reply text. RETURNS: 'id' of the new reply. Similar to POST_IG_COMMENT_REPLIES. WORKFLOW: GET_USER_MEDIA -> GET_IG_MEDIA_COMMENTS/GET_POST_COMMENTS -> REPLY_TO_COMMENT with comment's 'id'.",
 )
 def INSTAGRAM_REPLY_TO_COMMENT(
     ig_comment_id: Annotated[str, "Instagram comment ID to reply to (required)"],
@@ -2039,7 +2039,7 @@ def INSTAGRAM_GET_IG_COMMENT_REPLIES(
 
 @mcp.tool(
     "DELETE_COMMENT",
-    description="Delete Comment. Delete a comment on Instagram media. PARAMETER: ig_comment_id (required) - Get from GET_IG_MEDIA_COMMENTS or GET_POST_COMMENTS response → 'id' field of the comment to delete. RETURNS: Success boolean. PERMISSIONS: Can delete your own comments anywhere, or any comment on your own posts. Cannot delete other users' comments on others' posts. WORKFLOW: GET_USER_MEDIA → GET_IG_MEDIA_COMMENTS → DELETE_COMMENT with comment's 'id'.",
+    description="Delete Comment. Delete a comment on Instagram media. PARAMETER: ig_comment_id (required) - Get from GET_IG_MEDIA_COMMENTS or GET_POST_COMMENTS response -> 'id' field of the comment to delete. RETURNS: Success boolean. PERMISSIONS: Can delete your own comments anywhere, or any comment on your own posts. Cannot delete other users' comments on others' posts. WORKFLOW: GET_USER_MEDIA -> GET_IG_MEDIA_COMMENTS -> DELETE_COMMENT with comment's 'id'.",
 )
 def INSTAGRAM_DELETE_COMMENT(
     ig_comment_id: Annotated[str, "Instagram comment ID to delete (required)"],
@@ -2077,7 +2077,7 @@ def INSTAGRAM_DELETE_COMMENT(
 
 @mcp.tool(
     "GET_IG_MEDIA_INSIGHTS",
-    description="Get IG Media Insights. Get metrics for Instagram media. PARAMETERS: ig_media_id (required) - Get from: 1) GET_USER_MEDIA response → 'id' field, OR 2) CREATE_POST/POST_IG_USER_MEDIA_PUBLISH response → 'id' field (MUST be published media, NOT container ID). metric (required) - Array of metrics like ['reach', 'likes', 'comments', 'shares', 'saved']. IMPORTANT: Only works on PUBLISHED posts, not container IDs. API v22.0+: 'impressions' not supported, use 'reach'. Requirements: Media <2 years old, account needs 1000+ followers for some metrics.",
+    description="Get IG Media Insights. Get metrics for Instagram media. PARAMETERS: ig_media_id (required) - Get from: 1) GET_USER_MEDIA response -> 'id' field, OR 2) CREATE_POST/POST_IG_USER_MEDIA_PUBLISH response -> 'id' field (MUST be published media, NOT container ID). metric (required) - Array of metrics like ['reach', 'likes', 'comments', 'shares', 'saved']. IMPORTANT: Only works on PUBLISHED posts, not container IDs. API v22.0+: 'impressions' not supported, use 'reach'. Requirements: Media <2 years old, account needs 1000+ followers for some metrics.",
 )
 def INSTAGRAM_GET_IG_MEDIA_INSIGHTS(
     ig_media_id: Annotated[str, "Instagram media ID (required)"],
@@ -2518,7 +2518,7 @@ def INSTAGRAM_LIST_ALL_MESSAGES(
 
 @mcp.tool(
     "SEND_TEXT_MESSAGE",
-    description="Send Text Message. Send a text message to an Instagram user via DM. PARAMETERS: recipient_id (required) - Get from: 1) LIST_ALL_CONVERSATIONS response → 'participants' array → 'id' field, OR 2) GET_USER_BY_USERNAME response → 'instagram_user_id' field. text (required) - Message content. reply_to_message_id (optional) - Get from LIST_ALL_MESSAGES response → 'id' field of the message you want to reply to. RETURNS: Message 'id' and 'created_time'. NOTE: Recipient must have an open 24-hour messaging window (they messaged you first).",
+    description="Send Text Message. Send a text message to an Instagram user via DM. PARAMETERS: recipient_id (required) - Get from: 1) LIST_ALL_CONVERSATIONS response -> 'participants' array -> 'id' field, OR 2) GET_USER_BY_USERNAME response -> 'instagram_user_id' field. text (required) - Message content. reply_to_message_id (optional) - Get from LIST_ALL_MESSAGES response -> 'id' field of the message you want to reply to. RETURNS: Message 'id' and 'created_time'. NOTE: Recipient must have an open 24-hour messaging window (they messaged you first).",
 )
 def INSTAGRAM_SEND_TEXT_MESSAGE(
     recipient_id: Annotated[str, "Recipient Instagram user ID (required)"],
@@ -2693,7 +2693,7 @@ def INSTAGRAM_GET_USER_BY_USERNAME(
 
 @mcp.tool(
     "SEND_IMAGE",
-    description="Send Image. Send an image via Instagram DM to a specific user. PARAMETERS: recipient_id (required) - Get from: 1) LIST_ALL_CONVERSATIONS response → 'participants' array → 'id' field, OR 2) GET_USER_BY_USERNAME response → 'instagram_user_id' field. image_url (required) - Public URL of the image to send. RETURNS: Message 'id' and 'created_time'. NOTE: Image URL must be publicly accessible. Recipient must have an open 24-hour messaging window.",
+    description="Send Image. Send an image via Instagram DM to a specific user. PARAMETERS: recipient_id (required) - Get from: 1) LIST_ALL_CONVERSATIONS response -> 'participants' array -> 'id' field, OR 2) GET_USER_BY_USERNAME response -> 'instagram_user_id' field. image_url (required) - Public URL of the image to send. RETURNS: Message 'id' and 'created_time'. NOTE: Image URL must be publicly accessible. Recipient must have an open 24-hour messaging window.",
 )
 def INSTAGRAM_SEND_IMAGE(
     recipient_id: Annotated[str, "Recipient Instagram user ID (required)"],
@@ -2743,7 +2743,7 @@ def INSTAGRAM_SEND_IMAGE(
 
 @mcp.tool(
     "MARK_SEEN",
-    description="Mark Seen. Mark Instagram DM messages as read/seen for a specific user. PARAMETER: recipient_id (required) - Get from: 1) LIST_ALL_CONVERSATIONS response → 'participants' array → 'id' field, OR 2) GET_USER_BY_USERNAME response → 'instagram_user_id' field. IMPORTANT LIMITATIONS: The sender_action API may have limited support; recipient must have active 24-hour messaging window; requires instagram_manage_messages permission; only works with Business/Creator accounts. Error 500 may indicate feature not supported for your account.",
+    description="Mark Seen. Mark Instagram DM messages as read/seen for a specific user. PARAMETER: recipient_id (required) - Get from: 1) LIST_ALL_CONVERSATIONS response -> 'participants' array -> 'id' field, OR 2) GET_USER_BY_USERNAME response -> 'instagram_user_id' field. IMPORTANT LIMITATIONS: The sender_action API may have limited support; recipient must have active 24-hour messaging window; requires instagram_manage_messages permission; only works with Business/Creator accounts. Error 500 may indicate feature not supported for your account.",
 )
 def INSTAGRAM_MARK_SEEN(
     recipient_id: Annotated[str, "Recipient Instagram user ID (required)"],

@@ -3,7 +3,7 @@
     {
       "id": "CREATE_MEDIA_CONTAINER",
       "target": "tools.publishing:create_media_container",
-      "description": "Create Media Container. Create a draft media container for photos/videos/reels before publishing. PARAMETERS: image_url OR video_url (one required) - Public URL of media. caption (optional) - Post caption. media_type (optional) - 'IMAGE' or 'VIDEO'. cover_url (optional) - Cover image for videos. is_carousel_item (optional) - True if part of carousel. RETURNS: 'id' field (creation_id) - USE THIS IN: GET_POST_STATUS (to check processing), CREATE_POST or POST_IG_USER_MEDIA_PUBLISH (to publish). WORKFLOW: 1) Call this → 2) Get 'id' → 3) Call GET_POST_STATUS until 'FINISHED' → 4) Call CREATE_POST with creation_id.",
+      "description": "Create Media Container. Create a draft media container for photos/videos/reels before publishing. PARAMETERS: image_url OR video_url (one required) - Public URL of media. caption (optional) - Post caption. media_type (optional) - 'IMAGE' or 'VIDEO'. cover_url (optional) - Cover image for videos. is_carousel_item (optional) - True if part of carousel. RETURNS: 'id' field (creation_id) - USE THIS IN: GET_POST_STATUS (to check processing), CREATE_POST or POST_IG_USER_MEDIA_PUBLISH (to publish). WORKFLOW: 1) Call this -> 2) Get 'id' -> 3) Call GET_POST_STATUS until 'FINISHED' -> 4) Call CREATE_POST with creation_id.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -47,7 +47,7 @@
     {
       "id": "CREATE_CAROUSEL_CONTAINER",
       "target": "tools.publishing:create_carousel_container",
-      "description": "Create Carousel Container. Create a draft carousel post with multiple images/videos. PARAMETERS: children (required) - Array of creation_ids from CREATE_MEDIA_CONTAINER calls (each with is_carousel_item=True). OR use child_image_urls/child_video_urls to auto-create children. caption (optional). RETURNS: 'id' (creation_id) - USE THIS IN: GET_POST_STATUS, CREATE_POST. WORKFLOW: 1) CREATE_MEDIA_CONTAINER x N (with is_carousel_item=True) → 2) CREATE_CAROUSEL_CONTAINER with children array → 3) GET_POST_STATUS → 4) CREATE_POST.",
+      "description": "Create Carousel Container. Create a draft carousel post with multiple images/videos. PARAMETERS: children (required) - Array of creation_ids from CREATE_MEDIA_CONTAINER calls (each with is_carousel_item=True). OR use child_image_urls/child_video_urls to auto-create children. caption (optional). RETURNS: 'id' (creation_id) - USE THIS IN: GET_POST_STATUS, CREATE_POST. WORKFLOW: 1) CREATE_MEDIA_CONTAINER x N (with is_carousel_item=True) -> 2) CREATE_CAROUSEL_CONTAINER with children array -> 3) GET_POST_STATUS -> 4) CREATE_POST.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -63,7 +63,7 @@
     {
       "id": "GET_POST_STATUS",
       "target": "tools.publishing:get_post_status",
-      "description": "Get Post Status. Check the processing status of a draft post container. PARAMETER: creation_id (required) - Get from CREATE_MEDIA_CONTAINER or CREATE_CAROUSEL_CONTAINER response → 'id' field. RETURNS: 'status_code' with values: 'IN_PROGRESS' (still processing, wait and check again), 'FINISHED' (ready to publish - call CREATE_POST or POST_IG_USER_MEDIA_PUBLISH), 'ERROR' (processing failed, check error_message). WORKFLOW: Call repeatedly until status is 'FINISHED', then publish.",
+      "description": "Get Post Status. Check the processing status of a draft post container. PARAMETER: creation_id (required) - Get from CREATE_MEDIA_CONTAINER or CREATE_CAROUSEL_CONTAINER response -> 'id' field. RETURNS: 'status_code' with values: 'IN_PROGRESS' (still processing, wait and check again), 'FINISHED' (ready to publish - call CREATE_POST or POST_IG_USER_MEDIA_PUBLISH), 'ERROR' (processing failed, check error_message). WORKFLOW: Call repeatedly until status is 'FINISHED', then publish.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -76,7 +76,7 @@
     {
       "id": "CREATE_POST",
       "target": "tools.publishing:create_post",
-      "description": "Create Post. Publish a draft media container to Instagram (final publishing step). PARAMETER: creation_id (required) - Get from CREATE_MEDIA_CONTAINER or CREATE_CAROUSEL_CONTAINER response → 'id' field. RETURNS: 'id' (ig_media_id of published post) - USE THIS IN: GET_IG_MEDIA_INSIGHTS (for metrics), GET_IG_MEDIA_COMMENTS (for comments), POST_IG_COMMENT_REPLIES (to reply to comments). Auto-retries up to ~45s if media still processing. WORKFLOW: CREATE_MEDIA_CONTAINER → GET_POST_STATUS → CREATE_POST.",
+      "description": "Create Post. Publish a draft media container to Instagram (final publishing step). PARAMETER: creation_id (required) - Get from CREATE_MEDIA_CONTAINER or CREATE_CAROUSEL_CONTAINER response -> 'id' field. RETURNS: 'id' (ig_media_id of published post) - USE THIS IN: GET_IG_MEDIA_INSIGHTS (for metrics), GET_IG_MEDIA_COMMENTS (for comments), POST_IG_COMMENT_REPLIES (to reply to comments). Auto-retries up to ~45s if media still processing. WORKFLOW: CREATE_MEDIA_CONTAINER -> GET_POST_STATUS -> CREATE_POST.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -90,7 +90,7 @@
     {
       "id": "POST_IG_USER_MEDIA_PUBLISH",
       "target": "tools.publishing:post_ig_user_media_publish",
-      "description": "Publish IG User Media. Publish a media container to Instagram with automatic polling. PARAMETER: creation_id (required) - Get from CREATE_MEDIA_CONTAINER response → 'id' field. max_wait_seconds (optional, default 45) - How long to wait for processing. RETURNS: 'id' (ig_media_id of published post) - USE THIS IN: GET_IG_MEDIA_INSIGHTS, GET_IG_MEDIA_COMMENTS, POST_IG_COMMENT_REPLIES. Auto-polls status until FINISHED, then publishes. Rate limit: 25 posts per 24 hours.",
+      "description": "Publish IG User Media. Publish a media container to Instagram with automatic polling. PARAMETER: creation_id (required) - Get from CREATE_MEDIA_CONTAINER response -> 'id' field. max_wait_seconds (optional, default 45) - How long to wait for processing. RETURNS: 'id' (ig_media_id of published post) - USE THIS IN: GET_IG_MEDIA_INSIGHTS, GET_IG_MEDIA_COMMENTS, POST_IG_COMMENT_REPLIES. Auto-polls status until FINISHED, then publishes. Rate limit: 25 posts per 24 hours.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -242,7 +242,7 @@
     {
       "id": "GET_IG_MEDIA",
       "target": "tools.media:get_ig_media",
-      "description": "Get Instagram Media. Get details of a specific published Instagram media object. PARAMETER: ig_media_id (required) - Get from GET_USER_MEDIA response → 'id' field, OR from CREATE_POST/POST_IG_USER_MEDIA_PUBLISH response → 'id' field. RETURNS: Media details including id, caption, media_type, media_url, permalink, timestamp, like_count, comments_count. NOTE: This is for published media only, not containers.",
+      "description": "Get Instagram Media. Get details of a specific published Instagram media object. PARAMETER: ig_media_id (required) - Get from GET_USER_MEDIA response -> 'id' field, OR from CREATE_POST/POST_IG_USER_MEDIA_PUBLISH response -> 'id' field. RETURNS: Media details including id, caption, media_type, media_url, permalink, timestamp, like_count, comments_count. NOTE: This is for published media only, not containers.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -256,7 +256,7 @@
     {
       "id": "GET_IG_MEDIA_CHILDREN",
       "target": "tools.media:get_ig_media_children",
-      "description": "Get IG Media Children. Get child media objects from an Instagram carousel/album post. PARAMETER: ig_media_id (required) - Get from GET_USER_MEDIA response → 'id' field (must be a carousel post). RETURNS: Array of child media objects with 'id', media_type, media_url for each image/video in the carousel.",
+      "description": "Get IG Media Children. Get child media objects from an Instagram carousel/album post. PARAMETER: ig_media_id (required) - Get from GET_USER_MEDIA response -> 'id' field (must be a carousel post). RETURNS: Array of child media objects with 'id', media_type, media_url for each image/video in the carousel.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -270,7 +270,7 @@
     {
       "id": "GET_IG_MEDIA_COMMENTS",
       "target": "tools.media:get_ig_media_comments",
-      "description": "Get IG Media Comments. Retrieve comments on an Instagram media object. PARAMETER: ig_media_id (required) - Get from: 1) GET_USER_MEDIA response → 'id' field, OR 2) CREATE_POST/POST_IG_USER_MEDIA_PUBLISH response → 'id' field. RETURNS: Array of comment objects containing: 'id' (comment_id) - use in POST_IG_COMMENT_REPLIES, REPLY_TO_COMMENT, DELETE_COMMENT, GET_IG_COMMENT_REPLIES; 'text' - comment content; 'username' - commenter; 'timestamp'. PAGINATION: Use 'after' cursor for more.",
+      "description": "Get IG Media Comments. Retrieve comments on an Instagram media object. PARAMETER: ig_media_id (required) - Get from: 1) GET_USER_MEDIA response -> 'id' field, OR 2) CREATE_POST/POST_IG_USER_MEDIA_PUBLISH response -> 'id' field. RETURNS: Array of comment objects containing: 'id' (comment_id) - use in POST_IG_COMMENT_REPLIES, REPLY_TO_COMMENT, DELETE_COMMENT, GET_IG_COMMENT_REPLIES; 'text' - comment content; 'username' - commenter; 'timestamp'. PAGINATION: Use 'after' cursor for more.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -287,7 +287,7 @@
     {
       "id": "GET_POST_COMMENTS",
       "target": "tools.comments:get_post_comments",
-      "description": "Get Post Comments. Get comments on an Instagram post (alias for GET_IG_MEDIA_COMMENTS). PARAMETER: ig_post_id (required) - Get from: 1) GET_USER_MEDIA response → 'id' field, OR 2) CREATE_POST/POST_IG_USER_MEDIA_PUBLISH response → 'id' field. RETURNS: Array of comment objects with 'id' (comment_id) - use in POST_IG_COMMENT_REPLIES, REPLY_TO_COMMENT, DELETE_COMMENT; 'text'; 'username'; 'timestamp'.",
+      "description": "Get Post Comments. Get comments on an Instagram post (alias for GET_IG_MEDIA_COMMENTS). PARAMETER: ig_post_id (required) - Get from: 1) GET_USER_MEDIA response -> 'id' field, OR 2) CREATE_POST/POST_IG_USER_MEDIA_PUBLISH response -> 'id' field. RETURNS: Array of comment objects with 'id' (comment_id) - use in POST_IG_COMMENT_REPLIES, REPLY_TO_COMMENT, DELETE_COMMENT; 'text'; 'username'; 'timestamp'.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -302,7 +302,7 @@
     {
       "id": "GET_POST_INSIGHTS",
       "target": "tools.insights:get_post_insights",
-      "description": "Get Post Insights. Get Instagram post insights/analytics. PARAMETER: ig_post_id (required) - Get from: 1) GET_USER_MEDIA response → 'id' field, OR 2) CREATE_POST/POST_IG_USER_MEDIA_PUBLISH response → 'id' field (MUST be published post, NOT container). metric_preset (optional) - 'auto_safe' (default), or specific metrics. RETURNS: reach, likes, comments, shares, saved, etc. depending on media type.",
+      "description": "Get Post Insights. Get Instagram post insights/analytics. PARAMETER: ig_post_id (required) - Get from: 1) GET_USER_MEDIA response -> 'id' field, OR 2) CREATE_POST/POST_IG_USER_MEDIA_PUBLISH response -> 'id' field (MUST be published post, NOT container). metric_preset (optional) - 'auto_safe' (default), or specific metrics. RETURNS: reach, likes, comments, shares, saved, etc. depending on media type.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -317,7 +317,7 @@
     {
       "id": "POST_IG_MEDIA_COMMENTS",
       "target": "tools.comments:post_ig_media_comments",
-      "description": "Post IG Media Comments. Create a new comment on an Instagram media object. PARAMETERS: ig_media_id (required) - Get from GET_USER_MEDIA or CREATE_POST response → 'id' field. message (required) - Your comment text. CONSTRAINTS: Max 300 chars, max 4 hashtags, max 1 URL, cannot be all caps. RETURNS: 'id' of the new comment.",
+      "description": "Post IG Media Comments. Create a new comment on an Instagram media object. PARAMETERS: ig_media_id (required) - Get from GET_USER_MEDIA or CREATE_POST response -> 'id' field. message (required) - Your comment text. CONSTRAINTS: Max 300 chars, max 4 hashtags, max 1 URL, cannot be all caps. RETURNS: 'id' of the new comment.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -331,7 +331,7 @@
     {
       "id": "POST_IG_COMMENT_REPLIES",
       "target": "tools.comments:post_ig_comment_replies",
-      "description": "Post IG Comment Replies. Reply to an Instagram comment. PARAMETERS: ig_comment_id (required) - Get from GET_IG_MEDIA_COMMENTS or GET_POST_COMMENTS response → 'id' field of the comment to reply to. message (required) - Your reply text. CONSTRAINTS: Max 300 chars, max 4 hashtags, max 1 URL, cannot be all caps. RETURNS: 'id' of the new reply. WORKFLOW: GET_USER_MEDIA → GET_IG_MEDIA_COMMENTS → POST_IG_COMMENT_REPLIES with comment's 'id'.",
+      "description": "Post IG Comment Replies. Reply to an Instagram comment. PARAMETERS: ig_comment_id (required) - Get from GET_IG_MEDIA_COMMENTS or GET_POST_COMMENTS response -> 'id' field of the comment to reply to. message (required) - Your reply text. CONSTRAINTS: Max 300 chars, max 4 hashtags, max 1 URL, cannot be all caps. RETURNS: 'id' of the new reply. WORKFLOW: GET_USER_MEDIA -> GET_IG_MEDIA_COMMENTS -> POST_IG_COMMENT_REPLIES with comment's 'id'.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -361,7 +361,7 @@
     {
       "id": "REPLY_TO_COMMENT",
       "target": "tools.comments:reply_to_comment",
-      "description": "Reply To Comment. Reply to a comment on Instagram media (alias for POST_IG_COMMENT_REPLIES). PARAMETERS: ig_comment_id (required) - Get from GET_IG_MEDIA_COMMENTS or GET_POST_COMMENTS response → 'id' field. message (required) - Your reply. RETURNS: 'id' of the new reply. WORKFLOW: GET_USER_MEDIA → GET_IG_MEDIA_COMMENTS → REPLY_TO_COMMENT with comment's 'id'.",
+      "description": "Reply To Comment. Reply to a comment on Instagram media (alias for POST_IG_COMMENT_REPLIES). PARAMETERS: ig_comment_id (required) - Get from GET_IG_MEDIA_COMMENTS or GET_POST_COMMENTS response -> 'id' field. message (required) - Your reply. RETURNS: 'id' of the new reply. WORKFLOW: GET_USER_MEDIA -> GET_IG_MEDIA_COMMENTS -> REPLY_TO_COMMENT with comment's 'id'.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -375,7 +375,7 @@
     {
       "id": "GET_IG_COMMENT_REPLIES",
       "target": "tools.comments:get_ig_comment_replies",
-      "description": "Get IG Comment Replies. Get replies to a specific Instagram comment. PARAMETER: ig_comment_id (required) - Get from GET_IG_MEDIA_COMMENTS or GET_POST_COMMENTS response → 'id' field. RETURNS: Array of reply objects with 'id', 'text', 'username', 'timestamp'. PAGINATION: Use 'after' cursor for more replies.",
+      "description": "Get IG Comment Replies. Get replies to a specific Instagram comment. PARAMETER: ig_comment_id (required) - Get from GET_IG_MEDIA_COMMENTS or GET_POST_COMMENTS response -> 'id' field. RETURNS: Array of reply objects with 'id', 'text', 'username', 'timestamp'. PAGINATION: Use 'after' cursor for more replies.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -392,7 +392,7 @@
     {
       "id": "DELETE_COMMENT",
       "target": "tools.comments:delete_comment",
-      "description": "Delete Comment. Delete a comment on Instagram media. PARAMETER: ig_comment_id (required) - Get from GET_IG_MEDIA_COMMENTS or GET_POST_COMMENTS response → 'id' field of the comment to delete. RETURNS: Success boolean. PERMISSIONS: Can delete your own comments anywhere, or any comment on your own posts. Cannot delete other users' comments on others' posts. WORKFLOW: GET_USER_MEDIA → GET_IG_MEDIA_COMMENTS → DELETE_COMMENT with comment's 'id'.",
+      "description": "Delete Comment. Delete a comment on Instagram media. PARAMETER: ig_comment_id (required) - Get from GET_IG_MEDIA_COMMENTS or GET_POST_COMMENTS response -> 'id' field of the comment to delete. RETURNS: Success boolean. PERMISSIONS: Can delete your own comments anywhere, or any comment on your own posts. Cannot delete other users' comments on others' posts. WORKFLOW: GET_USER_MEDIA -> GET_IG_MEDIA_COMMENTS -> DELETE_COMMENT with comment's 'id'.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -405,7 +405,7 @@
     {
       "id": "GET_IG_MEDIA_INSIGHTS",
       "target": "tools.insights:get_ig_media_insights",
-      "description": "Get IG Media Insights. Get metrics for Instagram media. PARAMETERS: ig_media_id (required) - Get from: 1) GET_USER_MEDIA response → 'id' field, OR 2) CREATE_POST/POST_IG_USER_MEDIA_PUBLISH response → 'id' field (MUST be published media, NOT container ID). metric (required) - Array like ['reach', 'likes', 'comments', 'shares', 'saved']. IMPORTANT: Only works on PUBLISHED posts, not container IDs. API v22.0+: 'impressions' not supported, use 'reach'. Requirements: Media <2 years old.",
+      "description": "Get IG Media Insights. Get metrics for Instagram media. PARAMETERS: ig_media_id (required) - Get from: 1) GET_USER_MEDIA response -> 'id' field, OR 2) CREATE_POST/POST_IG_USER_MEDIA_PUBLISH response -> 'id' field (MUST be published media, NOT container ID). metric (required) - Array like ['reach', 'likes', 'comments', 'shares', 'saved']. IMPORTANT: Only works on PUBLISHED posts, not container IDs. API v22.0+: 'impressions' not supported, use 'reach'. Requirements: Media <2 years old.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -420,7 +420,7 @@
     {
       "id": "GET_CONVERSATION",
       "target": "tools.messaging:get_conversation",
-      "description": "Get Conversation. Get details about a specific Instagram DM conversation. PARAMETER: conversation_id (required) - Get from LIST_ALL_CONVERSATIONS response → 'id' field. RETURNS: Conversation details including 'id', 'participants' array (each with 'id' you can use as recipient_id in SEND_TEXT_MESSAGE, SEND_IMAGE), 'updated_time'.",
+      "description": "Get Conversation. Get details about a specific Instagram DM conversation. PARAMETER: conversation_id (required) - Get from LIST_ALL_CONVERSATIONS response -> 'id' field. RETURNS: Conversation details including 'id', 'participants' array (each with 'id' you can use as recipient_id in SEND_TEXT_MESSAGE, SEND_IMAGE), 'updated_time'.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -460,7 +460,7 @@
     {
       "id": "LIST_ALL_MESSAGES",
       "target": "tools.messaging:list_all_messages",
-      "description": "List All Messages. List all messages from a specific Instagram DM conversation. PARAMETER: conversation_id (required) - Get from LIST_ALL_CONVERSATIONS response → 'id' field. RETURNS: Array of message objects containing: 'id' (message_id) - use as reply_to_message_id in SEND_TEXT_MESSAGE or SEND_IMAGE to reply; 'message' - text content; 'from' - sender info with 'id' and 'username'; 'created_time' - timestamp; 'attachments' - any media. PAGINATION: Use 'after' cursor for more messages.",
+      "description": "List All Messages. List all messages from a specific Instagram DM conversation. PARAMETER: conversation_id (required) - Get from LIST_ALL_CONVERSATIONS response -> 'id' field. RETURNS: Array of message objects containing: 'id' (message_id) - use as reply_to_message_id in SEND_TEXT_MESSAGE or SEND_IMAGE to reply; 'message' - text content; 'from' - sender info with 'id' and 'username'; 'created_time' - timestamp; 'attachments' - any media. PAGINATION: Use 'after' cursor for more messages.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -475,11 +475,11 @@
     {
       "id": "SEND_TEXT_MESSAGE",
       "target": "tools.messaging:send_text_message",
-      "description": "Send Text Message. Send a text message to an Instagram user via DM. PARAMETERS: recipient_id (required) - Get from: 1) LIST_ALL_CONVERSATIONS response → 'participants' array → 'id' field, OR 2) GET_USER_BY_USERNAME response → 'instagram_user_id' field. text (required) - Message content. reply_to_message_id (optional) - Get from LIST_ALL_MESSAGES response → 'id' field to reply to specific message. RETURNS: Message 'id' and 'created_time'. NOTE: Recipient must have an open 24-hour messaging window (they messaged you first).",
+      "description": "Send Text Message. Send a text message to an Instagram user via DM. PARAMETERS: recipient_id (required) - Get from: 1) LIST_ALL_CONVERSATIONS response -> 'participants' array -> 'id' field, OR 2) GET_USER_BY_USERNAME response -> 'instagram_user_id' field. text (required) - Message content. reply_to_message_id (optional) - Get from LIST_ALL_MESSAGES response -> 'id' field to reply to specific message. RETURNS: Message 'id' and 'created_time'. NOTE: Recipient must have an open 24-hour messaging window (they messaged you first).",
       "input_schema": {
         "type": "object",
         "properties": {
-          "recipient_id": {"type": "string", "description": "Recipient Instagram user ID - get from LIST_ALL_CONVERSATIONS→participants→'id' OR GET_USER_BY_USERNAME→'instagram_user_id'"},
+          "recipient_id": {"type": "string", "description": "Recipient Instagram user ID - get from LIST_ALL_CONVERSATIONS->participants->'id' OR GET_USER_BY_USERNAME->'instagram_user_id'"},
           "text": {"type": "string", "description": "Text message to send"},
           "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"},
           "reply_to_message_id": {"type": "string", "description": "Message ID to reply to - get from LIST_ALL_MESSAGES response 'id' field"},
@@ -491,11 +491,11 @@
     {
       "id": "SEND_IMAGE",
       "target": "tools.messaging:send_image",
-      "description": "Send Image. Send an image via Instagram DM to a specific user. PARAMETERS: recipient_id (required) - Get from: 1) LIST_ALL_CONVERSATIONS response → 'participants' array → 'id' field, OR 2) GET_USER_BY_USERNAME response → 'instagram_user_id' field. image_url (required) - Public URL of the image to send. RETURNS: Message 'id' and 'created_time'. NOTE: Image URL must be publicly accessible. Recipient must have an open 24-hour messaging window.",
+      "description": "Send Image. Send an image via Instagram DM to a specific user. PARAMETERS: recipient_id (required) - Get from: 1) LIST_ALL_CONVERSATIONS response -> 'participants' array -> 'id' field, OR 2) GET_USER_BY_USERNAME response -> 'instagram_user_id' field. image_url (required) - Public URL of the image to send. RETURNS: Message 'id' and 'created_time'. NOTE: Image URL must be publicly accessible. Recipient must have an open 24-hour messaging window.",
       "input_schema": {
         "type": "object",
         "properties": {
-          "recipient_id": {"type": "string", "description": "Recipient Instagram user ID - get from LIST_ALL_CONVERSATIONS→participants→'id' OR GET_USER_BY_USERNAME→'instagram_user_id'"},
+          "recipient_id": {"type": "string", "description": "Recipient Instagram user ID - get from LIST_ALL_CONVERSATIONS->participants->'id' OR GET_USER_BY_USERNAME->'instagram_user_id'"},
           "image_url": {"type": "string", "description": "Public image URL to send"},
           "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"},
           "graph_api_version": {"type": "string", "description": "Graph API version"}
@@ -506,11 +506,11 @@
     {
       "id": "MARK_SEEN",
       "target": "tools.messaging:mark_seen",
-      "description": "Mark Seen. Mark Instagram DM messages as read/seen for a specific user. PARAMETER: recipient_id (required) - Get from: 1) LIST_ALL_CONVERSATIONS response → 'participants' array → 'id' field, OR 2) GET_USER_BY_USERNAME response → 'instagram_user_id' field. LIMITATIONS: sender_action API may have limited support; recipient must have active 24-hour messaging window; requires instagram_manage_messages permission.",
+      "description": "Mark Seen. Mark Instagram DM messages as read/seen for a specific user. PARAMETER: recipient_id (required) - Get from: 1) LIST_ALL_CONVERSATIONS response -> 'participants' array -> 'id' field, OR 2) GET_USER_BY_USERNAME response -> 'instagram_user_id' field. LIMITATIONS: sender_action API may have limited support; recipient must have active 24-hour messaging window; requires instagram_manage_messages permission.",
       "input_schema": {
         "type": "object",
         "properties": {
-          "recipient_id": {"type": "string", "description": "Recipient Instagram user ID - get from LIST_ALL_CONVERSATIONS→participants→'id' OR GET_USER_BY_USERNAME→'instagram_user_id'"},
+          "recipient_id": {"type": "string", "description": "Recipient Instagram user ID - get from LIST_ALL_CONVERSATIONS->participants->'id' OR GET_USER_BY_USERNAME->'instagram_user_id'"},
           "ig_user_id": {"type": "string", "description": "Instagram user ID (auto-detected)"},
           "graph_api_version": {"type": "string", "description": "Graph API version"}
         },
