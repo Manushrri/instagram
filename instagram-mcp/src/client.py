@@ -34,7 +34,7 @@ class InstagramClient:
     
     def _get_token_storage_path(self) -> Path:
         """Get the path to the token storage file."""
-        return Path(__file__).parent / '.instagram_tokens.json'
+        return Path(__file__).parent.parent / '.instagram_tokens.json'
     
     def _load_tokens(self) -> Dict[str, Any]:
         """Load tokens from persistent storage."""

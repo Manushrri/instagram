@@ -15,18 +15,19 @@ A modular MCP (Model Context Protocol) server for Instagram Graph API. Provides 
 
 ```
 instagram-mcp/
-├── main.py                 # Modular MCP server (recommended)
+├── src/                    # Source code
+│   ├── main.py             # Modular MCP server (recommended)
+│   ├── client.py           # Instagram API client
+│   ├── config.py           # Configuration settings
+│   └── tools/              # Modular tool implementations
+│       ├── publishing.py   # 6 publishing tools
+│       ├── user.py         # 8 user tools
+│       ├── media.py        # 3 media tools
+│       ├── comments.py     # 7 comment tools
+│       ├── messaging.py    # 7 messaging tools
+│       └── insights.py     # 3 insights tools
 ├── instagram_mcp_server.py # Original monolithic server
-├── client.py               # Instagram API client
-├── config.py               # Configuration settings
 ├── tools_manifest.json     # Tool definitions for dynamic loading
-├── tools/                  # Modular tool implementations
-│   ├── publishing.py       # 6 publishing tools
-│   ├── user.py             # 8 user tools
-│   ├── media.py            # 3 media tools
-│   ├── comments.py         # 7 comment tools
-│   ├── messaging.py        # 7 messaging tools
-│   └── insights.py         # 3 insights tools
 ├── helpers/                # Standalone helper scripts
 ├── oauth_setup.py          # Automated OAuth setup
 ├── get_page_token.py       # Page token helper
@@ -73,7 +74,7 @@ uv run instagram-mcp/oauth_setup.py
 
 ```bash
 # Modular server (recommended)
-uv run instagram-mcp/main.py
+uv run instagram-mcp/src/main.py
 
 # Or original monolithic server
 uv run instagram-mcp/instagram_mcp_server.py

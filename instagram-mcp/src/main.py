@@ -3,7 +3,7 @@
 Instagram MCP Server
 
 A modular MCP server using dynamic tool registration from manifest.
-Run with: uv run instagram-mcp/main.py
+Run with: uv run instagram-mcp/src/main.py
 """
 
 import importlib
@@ -14,19 +14,24 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+# Add parent directory to path for src imports (must be before imports)
+_SCRIPT_DIR = Path(__file__).resolve().parent
+_PARENT_DIR = _SCRIPT_DIR.parent
+if str(_PARENT_DIR) not in sys.path:
+    sys.path.insert(0, str(_PARENT_DIR))
+
 from dotenv import load_dotenv
 
-# Force load .env from script directory
-script_dir = Path(__file__).resolve().parent
-env_path = script_dir / '.env'
+# Force load .env from parent directory (instagram-mcp/)
+env_path = _PARENT_DIR / '.env'
 if env_path.exists():
     load_dotenv(env_path, verbose=True)
 
 from fastmcp import FastMCP
 from fastmcp.tools.tool import FunctionTool
 
-from config import settings
-from client import InstagramClient
+from src.config import settings
+from src.client import InstagramClient
 
 # Configure Logging
 logging.basicConfig(
@@ -36,7 +41,7 @@ logging.basicConfig(
 logger = logging.getLogger("instagram.server")
 
 # Root path for manifest loading
-ROOT_DIR = Path(__file__).resolve().parent
+ROOT_DIR = _SCRIPT_DIR
 
 # Server State
 state: Dict[str, Any] = {}
@@ -182,7 +187,7 @@ def create_dynamic_wrapper(func, description, tool_id=None):
 
 def register_tools():
     """Register tools from tools_manifest.json dynamically."""
-    manifest_path = ROOT_DIR / "tools_manifest.json"
+    manifest_path = ROOT_DIR.parent / "tools_manifest.json"
     if not manifest_path.exists():
         logger.error(f"Manifest not found at {manifest_path}")
         return
@@ -195,11 +200,6 @@ def register_tools():
         return
     
     logger.info("Loading tools from manifest...")
-    
-    # Add tools directory to path
-    tools_dir = ROOT_DIR / "tools"
-    if str(ROOT_DIR) not in sys.path:
-        sys.path.insert(0, str(ROOT_DIR))
     
     tools_registered = 0
     for entry in manifest.get("tools", []):
